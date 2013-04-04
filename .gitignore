@@ -1,0 +1,10 @@
+*.o
+.deps
+.dirstamp
+Makefile
+/config.log
+/config.h
+/config.status
+/libtool
+/stamp-h1
+/src/love
