@@ -48,7 +48,7 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__dirstamp = $(am__leading_dot)dirstamp
-am_love_OBJECTS = ./modules/window/sdl/Window.$(OBJEXT) \
+am_love_OBJECTS = ./modules/window/ppapi/Window.$(OBJEXT) \
 	./modules/window/Window.$(OBJEXT) \
 	./modules/timer/wrap_Timer.$(OBJEXT) \
 	./modules/timer/sdl/Timer.$(OBJEXT) \
@@ -438,8 +438,8 @@ love_SOURCES = \
 ./scripts/graphics.lua.h \
 ./scripts/boot.lua.h \
 ./scripts/audio.lua.h \
-./modules/window/sdl/Window.h \
-./modules/window/sdl/Window.cpp \
+./modules/window/ppapi/Window.h \
+./modules/window/ppapi/Window.cpp \
 ./modules/window/Window.h \
 ./modules/window/Window.cpp \
 ./modules/timer/wrap_Timer.h \
@@ -945,15 +945,15 @@ clean-binPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
-modules/window/sdl/$(am__dirstamp):
-	@$(MKDIR_P) ./modules/window/sdl
-	@: > modules/window/sdl/$(am__dirstamp)
-modules/window/sdl/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) ./modules/window/sdl/$(DEPDIR)
-	@: > modules/window/sdl/$(DEPDIR)/$(am__dirstamp)
-./modules/window/sdl/Window.$(OBJEXT):  \
-	modules/window/sdl/$(am__dirstamp) \
-	modules/window/sdl/$(DEPDIR)/$(am__dirstamp)
+modules/window/ppapi/$(am__dirstamp):
+	@$(MKDIR_P) ./modules/window/ppapi
+	@: > modules/window/ppapi/$(am__dirstamp)
+modules/window/ppapi/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) ./modules/window/ppapi/$(DEPDIR)
+	@: > modules/window/ppapi/$(DEPDIR)/$(am__dirstamp)
+./modules/window/ppapi/Window.$(OBJEXT):  \
+	modules/window/ppapi/$(am__dirstamp) \
+	modules/window/ppapi/$(DEPDIR)/$(am__dirstamp)
 modules/window/$(am__dirstamp):
 	@$(MKDIR_P) ./modules/window
 	@: > modules/window/$(am__dirstamp)
@@ -1949,7 +1949,7 @@ mostlyclean-compile:
 	-rm -f ./modules/timer/sdl/Timer.$(OBJEXT)
 	-rm -f ./modules/timer/wrap_Timer.$(OBJEXT)
 	-rm -f ./modules/window/Window.$(OBJEXT)
-	-rm -f ./modules/window/sdl/Window.$(OBJEXT)
+	-rm -f ./modules/window/ppapi/Window.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
@@ -2154,7 +2154,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./modules/timer/$(DEPDIR)/wrap_Timer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./modules/timer/sdl/$(DEPDIR)/Timer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./modules/window/$(DEPDIR)/Window.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./modules/window/sdl/$(DEPDIR)/Window.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./modules/window/ppapi/$(DEPDIR)/Window.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
@@ -2512,8 +2512,8 @@ distclean-generic:
 	-rm -f modules/timer/sdl/$(am__dirstamp)
 	-rm -f modules/window/$(DEPDIR)/$(am__dirstamp)
 	-rm -f modules/window/$(am__dirstamp)
-	-rm -f modules/window/sdl/$(DEPDIR)/$(am__dirstamp)
-	-rm -f modules/window/sdl/$(am__dirstamp)
+	-rm -f modules/window/ppapi/$(DEPDIR)/$(am__dirstamp)
+	-rm -f modules/window/ppapi/$(am__dirstamp)
 	-test -z "$(DEPDIR)/$(am__dirstamp)" || rm -f $(DEPDIR)/$(am__dirstamp)
 
 maintainer-clean-generic:
@@ -2524,7 +2524,7 @@ clean: clean-recursive
 clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ./$(DEPDIR) ./common/$(DEPDIR) ./libraries/Box2D/Collision/$(DEPDIR) ./libraries/Box2D/Collision/Shapes/$(DEPDIR) ./libraries/Box2D/Common/$(DEPDIR) ./libraries/Box2D/Dynamics/$(DEPDIR) ./libraries/Box2D/Dynamics/Contacts/$(DEPDIR) ./libraries/Box2D/Dynamics/Joints/$(DEPDIR) ./libraries/Box2D/Rope/$(DEPDIR) ./libraries/luasocket/$(DEPDIR) ./libraries/luasocket/libluasocket/$(DEPDIR) ./modules/audio/$(DEPDIR) ./modules/audio/null/$(DEPDIR) ./modules/audio/openal/$(DEPDIR) ./modules/event/$(DEPDIR) ./modules/event/sdl/$(DEPDIR) ./modules/filesystem/$(DEPDIR) ./modules/filesystem/physfs/$(DEPDIR) ./modules/font/$(DEPDIR) ./modules/font/freetype/$(DEPDIR) ./modules/graphics/$(DEPDIR) ./modules/graphics/opengl/$(DEPDIR) ./modules/image/$(DEPDIR) ./modules/image/devil/$(DEPDIR) ./modules/joystick/$(DEPDIR) ./modules/joystick/sdl/$(DEPDIR) ./modules/keyboard/$(DEPDIR) ./modules/keyboard/sdl/$(DEPDIR) ./modules/mouse/$(DEPDIR) ./modules/mouse/sdl/$(DEPDIR) ./modules/physics/$(DEPDIR) ./modules/physics/box2d/$(DEPDIR) ./modules/sound/$(DEPDIR) ./modules/sound/lullaby/$(DEPDIR) ./modules/thread/$(DEPDIR) ./modules/timer/$(DEPDIR) ./modules/timer/sdl/$(DEPDIR) ./modules/window/$(DEPDIR) ./modules/window/sdl/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) ./common/$(DEPDIR) ./libraries/Box2D/Collision/$(DEPDIR) ./libraries/Box2D/Collision/Shapes/$(DEPDIR) ./libraries/Box2D/Common/$(DEPDIR) ./libraries/Box2D/Dynamics/$(DEPDIR) ./libraries/Box2D/Dynamics/Contacts/$(DEPDIR) ./libraries/Box2D/Dynamics/Joints/$(DEPDIR) ./libraries/Box2D/Rope/$(DEPDIR) ./libraries/luasocket/$(DEPDIR) ./libraries/luasocket/libluasocket/$(DEPDIR) ./modules/audio/$(DEPDIR) ./modules/audio/null/$(DEPDIR) ./modules/audio/openal/$(DEPDIR) ./modules/event/$(DEPDIR) ./modules/event/sdl/$(DEPDIR) ./modules/filesystem/$(DEPDIR) ./modules/filesystem/physfs/$(DEPDIR) ./modules/font/$(DEPDIR) ./modules/font/freetype/$(DEPDIR) ./modules/graphics/$(DEPDIR) ./modules/graphics/opengl/$(DEPDIR) ./modules/image/$(DEPDIR) ./modules/image/devil/$(DEPDIR) ./modules/joystick/$(DEPDIR) ./modules/joystick/sdl/$(DEPDIR) ./modules/keyboard/$(DEPDIR) ./modules/keyboard/sdl/$(DEPDIR) ./modules/mouse/$(DEPDIR) ./modules/mouse/sdl/$(DEPDIR) ./modules/physics/$(DEPDIR) ./modules/physics/box2d/$(DEPDIR) ./modules/sound/$(DEPDIR) ./modules/sound/lullaby/$(DEPDIR) ./modules/thread/$(DEPDIR) ./modules/timer/$(DEPDIR) ./modules/timer/sdl/$(DEPDIR) ./modules/window/$(DEPDIR) ./modules/window/ppapi/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -2570,7 +2570,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ./$(DEPDIR) ./common/$(DEPDIR) ./libraries/Box2D/Collision/$(DEPDIR) ./libraries/Box2D/Collision/Shapes/$(DEPDIR) ./libraries/Box2D/Common/$(DEPDIR) ./libraries/Box2D/Dynamics/$(DEPDIR) ./libraries/Box2D/Dynamics/Contacts/$(DEPDIR) ./libraries/Box2D/Dynamics/Joints/$(DEPDIR) ./libraries/Box2D/Rope/$(DEPDIR) ./libraries/luasocket/$(DEPDIR) ./libraries/luasocket/libluasocket/$(DEPDIR) ./modules/audio/$(DEPDIR) ./modules/audio/null/$(DEPDIR) ./modules/audio/openal/$(DEPDIR) ./modules/event/$(DEPDIR) ./modules/event/sdl/$(DEPDIR) ./modules/filesystem/$(DEPDIR) ./modules/filesystem/physfs/$(DEPDIR) ./modules/font/$(DEPDIR) ./modules/font/freetype/$(DEPDIR) ./modules/graphics/$(DEPDIR) ./modules/graphics/opengl/$(DEPDIR) ./modules/image/$(DEPDIR) ./modules/image/devil/$(DEPDIR) ./modules/joystick/$(DEPDIR) ./modules/joystick/sdl/$(DEPDIR) ./modules/keyboard/$(DEPDIR) ./modules/keyboard/sdl/$(DEPDIR) ./modules/mouse/$(DEPDIR) ./modules/mouse/sdl/$(DEPDIR) ./modules/physics/$(DEPDIR) ./modules/physics/box2d/$(DEPDIR) ./modules/sound/$(DEPDIR) ./modules/sound/lullaby/$(DEPDIR) ./modules/thread/$(DEPDIR) ./modules/timer/$(DEPDIR) ./modules/timer/sdl/$(DEPDIR) ./modules/window/$(DEPDIR) ./modules/window/sdl/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) ./common/$(DEPDIR) ./libraries/Box2D/Collision/$(DEPDIR) ./libraries/Box2D/Collision/Shapes/$(DEPDIR) ./libraries/Box2D/Common/$(DEPDIR) ./libraries/Box2D/Dynamics/$(DEPDIR) ./libraries/Box2D/Dynamics/Contacts/$(DEPDIR) ./libraries/Box2D/Dynamics/Joints/$(DEPDIR) ./libraries/Box2D/Rope/$(DEPDIR) ./libraries/luasocket/$(DEPDIR) ./libraries/luasocket/libluasocket/$(DEPDIR) ./modules/audio/$(DEPDIR) ./modules/audio/null/$(DEPDIR) ./modules/audio/openal/$(DEPDIR) ./modules/event/$(DEPDIR) ./modules/event/sdl/$(DEPDIR) ./modules/filesystem/$(DEPDIR) ./modules/filesystem/physfs/$(DEPDIR) ./modules/font/$(DEPDIR) ./modules/font/freetype/$(DEPDIR) ./modules/graphics/$(DEPDIR) ./modules/graphics/opengl/$(DEPDIR) ./modules/image/$(DEPDIR) ./modules/image/devil/$(DEPDIR) ./modules/joystick/$(DEPDIR) ./modules/joystick/sdl/$(DEPDIR) ./modules/keyboard/$(DEPDIR) ./modules/keyboard/sdl/$(DEPDIR) ./modules/mouse/$(DEPDIR) ./modules/mouse/sdl/$(DEPDIR) ./modules/physics/$(DEPDIR) ./modules/physics/box2d/$(DEPDIR) ./modules/sound/$(DEPDIR) ./modules/sound/lullaby/$(DEPDIR) ./modules/thread/$(DEPDIR) ./modules/timer/$(DEPDIR) ./modules/timer/sdl/$(DEPDIR) ./modules/window/$(DEPDIR) ./modules/window/ppapi/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

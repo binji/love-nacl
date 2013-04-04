@@ -11,8 +11,8 @@ love_SOURCES = \
 ./scripts/graphics.lua.h \
 ./scripts/boot.lua.h \
 ./scripts/audio.lua.h \
-./modules/window/sdl/Window.h \
-./modules/window/sdl/Window.cpp \
+./modules/window/ppapi/Window.h \
+./modules/window/ppapi/Window.cpp \
 ./modules/window/Window.h \
 ./modules/window/Window.cpp \
 ./modules/timer/wrap_Timer.h \
