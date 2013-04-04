@@ -10,8 +10,8 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_SEARCH_LIBS([sqrt], [m], [], AC_MSG_ERROR([Can't LÖVE without C math library]))
 dnl AC_SEARCH_LIBS([SDL_Init], [SDL], [], AC_MSG_ERROR([Can't LÖVE without SDL]))
-AC_SEARCH_LIBS([glLoadIdentity], [GL], [], AC_MSG_ERROR([Can't LÖVE without OpenGL]))
-#AC_SEARCH_LIBS([gluOrtho2D], [GLU], [], AC_MSG_ERROR([Can't LÖVE without OpenGL Utility Library]))
+dnl AC_SEARCH_LIBS([glLoadIdentity], [GL], [], AC_MSG_ERROR([Can't LÖVE without OpenGL]))
+dnl #AC_SEARCH_LIBS([gluOrtho2D], [GLU], [], AC_MSG_ERROR([Can't LÖVE without OpenGL Utility Library]))
 AC_SEARCH_LIBS([alSourcePlay], [openal], [], AC_MSG_ERROR([Can't LÖVE without OpenAL]))
 lua=lua
 AC_ARG_WITH([luajit],
