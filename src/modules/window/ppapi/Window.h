@@ -45,7 +45,9 @@ namespace ppapi
 		void setMouseVisible(bool visible);
 		bool getMouseVisible();
 
-		static Window *getSingleton();
+		static love::window::Window *getSingleton();
+
+		const char *getName() const;
 	}; // Window
 } // ppapi
 } // window

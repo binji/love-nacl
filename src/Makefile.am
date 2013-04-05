@@ -11,6 +11,7 @@ love_SOURCES = \
 ./scripts/graphics.lua.h \
 ./scripts/boot.lua.h \
 ./scripts/audio.lua.h \
+./modules/window/ppapi/Module.cpp \
 ./modules/window/ppapi/Window.h \
 ./modules/window/ppapi/Window.cpp \
 ./modules/window/Window.h \
@@ -166,44 +167,42 @@ love_SOURCES = \
 ./modules/image/ImageData.h \
 ./modules/image/ImageData.cpp \
 ./modules/image/Image.h \
-./modules/graphics/opengl/wrap_SpriteBatch.h \
-./modules/graphics/opengl/wrap_SpriteBatch.cpp \
-./modules/graphics/opengl/wrap_Quad.h \
-./modules/graphics/opengl/wrap_Quad.cpp \
-./modules/graphics/opengl/wrap_PixelEffect.h \
-./modules/graphics/opengl/wrap_PixelEffect.cpp \
-./modules/graphics/opengl/wrap_ParticleSystem.h \
-./modules/graphics/opengl/wrap_ParticleSystem.cpp \
-./modules/graphics/opengl/wrap_Image.h \
-./modules/graphics/opengl/wrap_Image.cpp \
-./modules/graphics/opengl/wrap_Graphics.h \
-./modules/graphics/opengl/wrap_Graphics.cpp \
-./modules/graphics/opengl/wrap_Font.h \
-./modules/graphics/opengl/wrap_Font.cpp \
-./modules/graphics/opengl/wrap_Canvas.h \
-./modules/graphics/opengl/wrap_Canvas.cpp \
-./modules/graphics/opengl/VertexBuffer.h \
-./modules/graphics/opengl/VertexBuffer.cpp \
-./modules/graphics/opengl/SpriteBatch.h \
-./modules/graphics/opengl/SpriteBatch.cpp \
-./modules/graphics/opengl/Quad.h \
-./modules/graphics/opengl/Quad.cpp \
-./modules/graphics/opengl/PixelEffect.h \
-./modules/graphics/opengl/PixelEffect.cpp \
-./modules/graphics/opengl/ParticleSystem.h \
-./modules/graphics/opengl/ParticleSystem.cpp \
-./modules/graphics/opengl/OpenGL.h \
-./modules/graphics/opengl/OpenGL.cpp \
-./modules/graphics/opengl/Image.h \
-./modules/graphics/opengl/Image.cpp \
-./modules/graphics/opengl/Graphics.h \
-./modules/graphics/opengl/Graphics.cpp \
-./modules/graphics/opengl/GLee.h \
-./modules/graphics/opengl/GLee.c \
-./modules/graphics/opengl/Font.h \
-./modules/graphics/opengl/Font.cpp \
-./modules/graphics/opengl/Canvas.h \
-./modules/graphics/opengl/Canvas.cpp \
+./modules/graphics/gles2/wrap_SpriteBatch.h \
+./modules/graphics/gles2/wrap_SpriteBatch.cpp \
+./modules/graphics/gles2/wrap_Quad.h \
+./modules/graphics/gles2/wrap_Quad.cpp \
+./modules/graphics/gles2/wrap_PixelEffect.h \
+./modules/graphics/gles2/wrap_PixelEffect.cpp \
+./modules/graphics/gles2/wrap_ParticleSystem.h \
+./modules/graphics/gles2/wrap_ParticleSystem.cpp \
+./modules/graphics/gles2/wrap_Image.h \
+./modules/graphics/gles2/wrap_Image.cpp \
+./modules/graphics/gles2/wrap_Graphics.h \
+./modules/graphics/gles2/wrap_Graphics.cpp \
+./modules/graphics/gles2/wrap_Font.h \
+./modules/graphics/gles2/wrap_Font.cpp \
+./modules/graphics/gles2/wrap_Canvas.h \
+./modules/graphics/gles2/wrap_Canvas.cpp \
+./modules/graphics/gles2/VertexBuffer.h \
+./modules/graphics/gles2/VertexBuffer.cpp \
+./modules/graphics/gles2/SpriteBatch.h \
+./modules/graphics/gles2/SpriteBatch.cpp \
+./modules/graphics/gles2/Quad.h \
+./modules/graphics/gles2/Quad.cpp \
+./modules/graphics/gles2/PixelEffect.h \
+./modules/graphics/gles2/PixelEffect.cpp \
+./modules/graphics/gles2/ParticleSystem.h \
+./modules/graphics/gles2/ParticleSystem.cpp \
+./modules/graphics/gles2/OpenGL.h \
+./modules/graphics/gles2/OpenGL.cpp \
+./modules/graphics/gles2/Image.h \
+./modules/graphics/gles2/Image.cpp \
+./modules/graphics/gles2/Graphics.h \
+./modules/graphics/gles2/Graphics.cpp \
+./modules/graphics/gles2/Font.h \
+./modules/graphics/gles2/Font.cpp \
+./modules/graphics/gles2/Canvas.h \
+./modules/graphics/gles2/Canvas.cpp \
 ./modules/graphics/Volatile.h \
 ./modules/graphics/Volatile.cpp \
 ./modules/graphics/Quad.h \
@@ -277,45 +276,6 @@ love_SOURCES = \
 ./libraries/utf8/utf8/core.h \
 ./libraries/utf8/utf8/checked.h \
 ./libraries/utf8/utf8.h \
-./libraries/luasocket/luasocket.h \
-./libraries/luasocket/luasocket.cpp \
-./libraries/luasocket/libluasocket/usocket.h \
-./libraries/luasocket/libluasocket/usocket.c \
-./libraries/luasocket/libluasocket/url.lua.h \
-./libraries/luasocket/libluasocket/unix.h \
-./libraries/luasocket/libluasocket/unix.c \
-./libraries/luasocket/libluasocket/udp.h \
-./libraries/luasocket/libluasocket/udp.c \
-./libraries/luasocket/libluasocket/tp.lua.h \
-./libraries/luasocket/libluasocket/timeout.h \
-./libraries/luasocket/libluasocket/timeout.c \
-./libraries/luasocket/libluasocket/tcp.h \
-./libraries/luasocket/libluasocket/tcp.c \
-./libraries/luasocket/libluasocket/socket.lua.h \
-./libraries/luasocket/libluasocket/socket.h \
-./libraries/luasocket/libluasocket/smtp.lua.h \
-./libraries/luasocket/libluasocket/select.h \
-./libraries/luasocket/libluasocket/select.c \
-./libraries/luasocket/libluasocket/options.h \
-./libraries/luasocket/libluasocket/options.c \
-./libraries/luasocket/libluasocket/mime.lua.h \
-./libraries/luasocket/libluasocket/mime.h \
-./libraries/luasocket/libluasocket/mime.c \
-./libraries/luasocket/libluasocket/luasocket.h \
-./libraries/luasocket/libluasocket/luasocket.c \
-./libraries/luasocket/libluasocket/ltn12.lua.h \
-./libraries/luasocket/libluasocket/io.h \
-./libraries/luasocket/libluasocket/io.c \
-./libraries/luasocket/libluasocket/inet.h \
-./libraries/luasocket/libluasocket/inet.c \
-./libraries/luasocket/libluasocket/http.lua.h \
-./libraries/luasocket/libluasocket/ftp.lua.h \
-./libraries/luasocket/libluasocket/except.h \
-./libraries/luasocket/libluasocket/except.c \
-./libraries/luasocket/libluasocket/buffer.h \
-./libraries/luasocket/libluasocket/buffer.c \
-./libraries/luasocket/libluasocket/auxiliar.h \
-./libraries/luasocket/libluasocket/auxiliar.c \
 ./libraries/Box2D/Rope/b2Rope.h \
 ./libraries/Box2D/Rope/b2Rope.cpp \
 ./libraries/Box2D/Dynamics/b2WorldCallbacks.h \
@@ -440,3 +400,43 @@ love_SOURCES = \
 ./common/Exception.cpp \
 ./common/EnumMap.h \
 ./common/Data.h
+
+#./libraries/luasocket/luasocket.h
+#./libraries/luasocket/luasocket.cpp
+#./libraries/luasocket/libluasocket/usocket.h
+#./libraries/luasocket/libluasocket/usocket.c
+#./libraries/luasocket/libluasocket/url.lua.h
+#./libraries/luasocket/libluasocket/unix.h
+#./libraries/luasocket/libluasocket/unix.c
+#./libraries/luasocket/libluasocket/udp.h
+#./libraries/luasocket/libluasocket/udp.c
+#./libraries/luasocket/libluasocket/tp.lua.h
+#./libraries/luasocket/libluasocket/timeout.h
+#./libraries/luasocket/libluasocket/timeout.c
+#./libraries/luasocket/libluasocket/tcp.h
+#./libraries/luasocket/libluasocket/tcp.c
+#./libraries/luasocket/libluasocket/socket.lua.h
+#./libraries/luasocket/libluasocket/socket.h
+#./libraries/luasocket/libluasocket/smtp.lua.h
+#./libraries/luasocket/libluasocket/select.h
+#./libraries/luasocket/libluasocket/select.c
+#./libraries/luasocket/libluasocket/options.h
+#./libraries/luasocket/libluasocket/options.c
+#./libraries/luasocket/libluasocket/mime.lua.h
+#./libraries/luasocket/libluasocket/mime.h
+#./libraries/luasocket/libluasocket/mime.c
+#./libraries/luasocket/libluasocket/luasocket.h
+#./libraries/luasocket/libluasocket/luasocket.c
+#./libraries/luasocket/libluasocket/ltn12.lua.h
+#./libraries/luasocket/libluasocket/io.h
+#./libraries/luasocket/libluasocket/io.c
+#./libraries/luasocket/libluasocket/inet.h
+#./libraries/luasocket/libluasocket/inet.c
+#./libraries/luasocket/libluasocket/http.lua.h
+#./libraries/luasocket/libluasocket/ftp.lua.h
+#./libraries/luasocket/libluasocket/except.h
+#./libraries/luasocket/libluasocket/except.c
+#./libraries/luasocket/libluasocket/buffer.h
+#./libraries/luasocket/libluasocket/buffer.c
+#./libraries/luasocket/libluasocket/auxiliar.h
+#./libraries/luasocket/libluasocket/auxiliar.c
