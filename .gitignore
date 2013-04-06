@@ -1,10 +1,15 @@
 *.o
+*.love
 .deps
 .dirstamp
 Makefile
-/config.log
+/autom4te.cache
+/build.ninja
 /config.h
+/config.log
 /config.status
 /libtool
-/stamp-h1
+/.ninja_log
+/out
 /src/love
+/stamp-h1

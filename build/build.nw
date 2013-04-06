@@ -1,0 +1,303 @@
+# vim: set syntax=python
+
+#ARCHES=('x86_32', 'x86_64', 'arm')
+ARCHES=('x86_32', 'x86_64')
+#CONFIGS=('debug', 'release')
+CONFIGS=('debug',)
+arch_config={'arch': ARCHES, 'config': CONFIGS}
+
+Variable('nacl_sdk_root', Args['nacl_sdk_root'])
+Variable('toolchain_dir', '$nacl_sdk_root/toolchain')
+Variable('toolchain_dir_x86', '$toolchain_dir/%s_x86_newlib' % Args['platform'])
+Variable('toolchain_dir_arm', '$toolchain_dir/%s_arm_newlib' % Args['platform'])
+Variable('cc-x86_32', '$toolchain_dir_x86/bin/i686-nacl-gcc')
+Variable('cxx-x86_32', '$toolchain_dir_x86/bin/i686-nacl-g++')
+Variable('ar-x86_32', '$toolchain_dir_x86/bin/i686-nacl-ar')
+Variable('cc-x86_64', '$toolchain_dir_x86/bin/x86_64-nacl-gcc')
+Variable('cxx-x86_64', '$toolchain_dir_x86/bin/x86_64-nacl-g++')
+Variable('ar-x86_64', '$toolchain_dir_x86/bin/x86_64-nacl-ar')
+Variable('cc-arm', '$toolchain_dir_arm/bin/arm-nacl-gcc')
+Variable('cxx-arm', '$toolchain_dir_arm/bin/arm-nacl-g++')
+Variable('ar-arm', '$toolchain_dir_arm/bin/arm-nacl-ar')
+Variable('nmf', '$nacl_sdk_root/tools/create_nmf.py')
+Variable('cc-host', 'gcc')
+Variable('cxx-host', 'g++')
+Variable('ar-host', 'ar')
+
+Rule('cp', 'cp $in $out', 'COPY $out')
+Rule('cc', '$cc $ccflags -MMD -MF $out.d -c $in -o $out', 'CC $out',
+     depfile='$out.d')
+Rule('ar', '$ar rc $out $in', 'AR $out')
+Rule('link', '$cc $in $ldflags -o $out', 'LINK $out')
+Rule('nmf', '$nmf $in -o $out', 'NMF $out')
+
+sources = Build('out/{arch}/{config}/{inf:-ext}.o', 'cc', '{inf}') \
+    .Tag('{name}-sources')
+#lib = Build('out/{arch}/{config}/lib{name}.a', 'ar').Tag('{name}-lib')
+exe = Build('out/{name}_{arch}_{config}.nexe', 'link').Tag('{name}-exe')
+nmf = Build('out/{name}_{config}.nmf', 'nmf').Tag('{name}-nmf')
+
+# GAPI #########################################################################
+
+LOVE_SOURCES = [
+  'src/common/b64.cpp',
+  'src/common/delay.cpp',
+  'src/common/Exception.cpp',
+  'src/common/Matrix.cpp',
+  'src/common/Memoizer.cpp',
+  'src/common/Object.cpp',
+  'src/common/Reference.cpp',
+  'src/common/runtime.cpp',
+  'src/common/utf8.cpp',
+  'src/common/Variant.cpp',
+  'src/common/Vector.cpp',
+  'src/common/wrap_Data.cpp',
+  'src/libraries/Box2D/Collision/b2BroadPhase.cpp',
+  'src/libraries/Box2D/Collision/b2CollideCircle.cpp',
+  'src/libraries/Box2D/Collision/b2CollideEdge.cpp',
+  'src/libraries/Box2D/Collision/b2CollidePolygon.cpp',
+  'src/libraries/Box2D/Collision/b2Collision.cpp',
+  'src/libraries/Box2D/Collision/b2Distance.cpp',
+  'src/libraries/Box2D/Collision/b2DynamicTree.cpp',
+  'src/libraries/Box2D/Collision/b2TimeOfImpact.cpp',
+  'src/libraries/Box2D/Collision/Shapes/b2ChainShape.cpp',
+  'src/libraries/Box2D/Collision/Shapes/b2CircleShape.cpp',
+  'src/libraries/Box2D/Collision/Shapes/b2EdgeShape.cpp',
+  'src/libraries/Box2D/Collision/Shapes/b2PolygonShape.cpp',
+  'src/libraries/Box2D/Common/b2BlockAllocator.cpp',
+  'src/libraries/Box2D/Common/b2Draw.cpp',
+  'src/libraries/Box2D/Common/b2Math.cpp',
+  'src/libraries/Box2D/Common/b2Settings.cpp',
+  'src/libraries/Box2D/Common/b2StackAllocator.cpp',
+  'src/libraries/Box2D/Common/b2Timer.cpp',
+  'src/libraries/Box2D/Dynamics/b2Body.cpp',
+  'src/libraries/Box2D/Dynamics/b2ContactManager.cpp',
+  'src/libraries/Box2D/Dynamics/b2Fixture.cpp',
+  'src/libraries/Box2D/Dynamics/b2Island.cpp',
+  'src/libraries/Box2D/Dynamics/b2WorldCallbacks.cpp',
+  'src/libraries/Box2D/Dynamics/b2World.cpp',
+  'src/libraries/Box2D/Dynamics/Contacts/b2ChainAndCircleContact.cpp',
+  'src/libraries/Box2D/Dynamics/Contacts/b2ChainAndPolygonContact.cpp',
+  'src/libraries/Box2D/Dynamics/Contacts/b2CircleContact.cpp',
+  'src/libraries/Box2D/Dynamics/Contacts/b2Contact.cpp',
+  'src/libraries/Box2D/Dynamics/Contacts/b2ContactSolver.cpp',
+  'src/libraries/Box2D/Dynamics/Contacts/b2EdgeAndCircleContact.cpp',
+  'src/libraries/Box2D/Dynamics/Contacts/b2EdgeAndPolygonContact.cpp',
+  'src/libraries/Box2D/Dynamics/Contacts/b2PolygonAndCircleContact.cpp',
+  'src/libraries/Box2D/Dynamics/Contacts/b2PolygonContact.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2DistanceJoint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2FrictionJoint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2GearJoint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2Joint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2MouseJoint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2PrismaticJoint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2PulleyJoint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2RevoluteJoint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2RopeJoint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2WeldJoint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2WheelJoint.cpp',
+  'src/libraries/Box2D/Rope/b2Rope.cpp',
+  'src/love.cpp',
+  'src/modules/audio/Audio.cpp',
+  'src/modules/audio/null/Audio.cpp',
+  'src/modules/audio/null/Source.cpp',
+  'src/modules/audio/openal/Audio.cpp',
+  'src/modules/audio/openal/Pool.cpp',
+  'src/modules/audio/openal/Source.cpp',
+  'src/modules/audio/Source.cpp',
+  'src/modules/audio/wrap_Audio.cpp',
+  'src/modules/audio/wrap_Source.cpp',
+  'src/modules/event/Event.cpp',
+  'src/modules/event/sdl/Event.cpp',
+  'src/modules/event/sdl/wrap_Event.cpp',
+  'src/modules/filesystem/File.cpp',
+  'src/modules/filesystem/FileData.cpp',
+  'src/modules/filesystem/physfs/File.cpp',
+  'src/modules/filesystem/physfs/Filesystem.cpp',
+  'src/modules/filesystem/physfs/wrap_File.cpp',
+  'src/modules/filesystem/physfs/wrap_FileData.cpp',
+  'src/modules/filesystem/physfs/wrap_Filesystem.cpp',
+  'src/modules/font/freetype/Font.cpp',
+  'src/modules/font/freetype/TrueTypeRasterizer.cpp',
+  'src/modules/font/freetype/wrap_Font.cpp',
+  'src/modules/font/GlyphData.cpp',
+  'src/modules/font/ImageRasterizer.cpp',
+  'src/modules/font/Rasterizer.cpp',
+  'src/modules/font/wrap_GlyphData.cpp',
+  'src/modules/font/wrap_Rasterizer.cpp',
+  'src/modules/graphics/Drawable.cpp',
+  'src/modules/graphics/DrawQable.cpp',
+  'src/modules/graphics/gles2/Canvas.cpp',
+  'src/modules/graphics/gles2/Font.cpp',
+  'src/modules/graphics/gles2/Graphics.cpp',
+  'src/modules/graphics/gles2/Image.cpp',
+  'src/modules/graphics/gles2/OpenGL.cpp',
+  'src/modules/graphics/gles2/ParticleSystem.cpp',
+  'src/modules/graphics/gles2/PixelEffect.cpp',
+  'src/modules/graphics/gles2/Quad.cpp',
+  'src/modules/graphics/gles2/SpriteBatch.cpp',
+  'src/modules/graphics/gles2/VertexBuffer.cpp',
+  'src/modules/graphics/gles2/wrap_Canvas.cpp',
+  'src/modules/graphics/gles2/wrap_Font.cpp',
+  'src/modules/graphics/gles2/wrap_Graphics.cpp',
+  'src/modules/graphics/gles2/wrap_Image.cpp',
+  'src/modules/graphics/gles2/wrap_ParticleSystem.cpp',
+  'src/modules/graphics/gles2/wrap_PixelEffect.cpp',
+  'src/modules/graphics/gles2/wrap_Quad.cpp',
+  'src/modules/graphics/gles2/wrap_SpriteBatch.cpp',
+  'src/modules/graphics/Graphics.cpp',
+  'src/modules/graphics/Image.cpp',
+  'src/modules/graphics/Quad.cpp',
+  'src/modules/graphics/Volatile.cpp',
+  'src/modules/image/devil/Image.cpp',
+  'src/modules/image/devil/ImageData.cpp',
+  'src/modules/image/ImageData.cpp',
+  'src/modules/image/wrap_Image.cpp',
+  'src/modules/image/wrap_ImageData.cpp',
+  'src/modules/joystick/Joystick.cpp',
+  'src/modules/joystick/sdl/Joystick.cpp',
+  'src/modules/joystick/sdl/wrap_Joystick.cpp',
+  'src/modules/keyboard/Keyboard.cpp',
+  'src/modules/keyboard/sdl/Keyboard.cpp',
+  'src/modules/keyboard/wrap_Keyboard.cpp',
+  'src/modules/mouse/Mouse.cpp',
+  'src/modules/mouse/sdl/Mouse.cpp',
+  'src/modules/mouse/wrap_Mouse.cpp',
+  'src/modules/physics/Body.cpp',
+  'src/modules/physics/box2d/Body.cpp',
+  'src/modules/physics/box2d/ChainShape.cpp',
+  'src/modules/physics/box2d/CircleShape.cpp',
+  'src/modules/physics/box2d/Contact.cpp',
+  'src/modules/physics/box2d/DistanceJoint.cpp',
+  'src/modules/physics/box2d/EdgeShape.cpp',
+  'src/modules/physics/box2d/Fixture.cpp',
+  'src/modules/physics/box2d/FrictionJoint.cpp',
+  'src/modules/physics/box2d/GearJoint.cpp',
+  'src/modules/physics/box2d/Joint.cpp',
+  'src/modules/physics/box2d/MouseJoint.cpp',
+  'src/modules/physics/box2d/Physics.cpp',
+  'src/modules/physics/box2d/PolygonShape.cpp',
+  'src/modules/physics/box2d/PrismaticJoint.cpp',
+  'src/modules/physics/box2d/PulleyJoint.cpp',
+  'src/modules/physics/box2d/RevoluteJoint.cpp',
+  'src/modules/physics/box2d/RopeJoint.cpp',
+  'src/modules/physics/box2d/Shape.cpp',
+  'src/modules/physics/box2d/WeldJoint.cpp',
+  'src/modules/physics/box2d/WheelJoint.cpp',
+  'src/modules/physics/box2d/World.cpp',
+  'src/modules/physics/box2d/wrap_Body.cpp',
+  'src/modules/physics/box2d/wrap_ChainShape.cpp',
+  'src/modules/physics/box2d/wrap_CircleShape.cpp',
+  'src/modules/physics/box2d/wrap_Contact.cpp',
+  'src/modules/physics/box2d/wrap_DistanceJoint.cpp',
+  'src/modules/physics/box2d/wrap_EdgeShape.cpp',
+  'src/modules/physics/box2d/wrap_Fixture.cpp',
+  'src/modules/physics/box2d/wrap_FrictionJoint.cpp',
+  'src/modules/physics/box2d/wrap_GearJoint.cpp',
+  'src/modules/physics/box2d/wrap_Joint.cpp',
+  'src/modules/physics/box2d/wrap_MouseJoint.cpp',
+  'src/modules/physics/box2d/wrap_Physics.cpp',
+  'src/modules/physics/box2d/wrap_PolygonShape.cpp',
+  'src/modules/physics/box2d/wrap_PrismaticJoint.cpp',
+  'src/modules/physics/box2d/wrap_PulleyJoint.cpp',
+  'src/modules/physics/box2d/wrap_RevoluteJoint.cpp',
+  'src/modules/physics/box2d/wrap_RopeJoint.cpp',
+  'src/modules/physics/box2d/wrap_Shape.cpp',
+  'src/modules/physics/box2d/wrap_WeldJoint.cpp',
+  'src/modules/physics/box2d/wrap_WheelJoint.cpp',
+  'src/modules/physics/box2d/wrap_World.cpp',
+  'src/modules/physics/Joint.cpp',
+  'src/modules/physics/Shape.cpp',
+  'src/modules/sound/lullaby/Decoder.cpp',
+  'src/modules/sound/lullaby/ModPlugDecoder.cpp',
+  'src/modules/sound/lullaby/Mpg123Decoder.cpp',
+  'src/modules/sound/lullaby/Sound.cpp',
+  'src/modules/sound/lullaby/VorbisDecoder.cpp',
+  'src/modules/sound/Sound.cpp',
+  'src/modules/sound/SoundData.cpp',
+  'src/modules/sound/wrap_Decoder.cpp',
+  'src/modules/sound/wrap_Sound.cpp',
+  'src/modules/sound/wrap_SoundData.cpp',
+  'src/modules/thread/Thread.cpp',
+  'src/modules/thread/threads.cpp',
+  'src/modules/thread/wrap_Thread.cpp',
+  'src/modules/timer/sdl/Timer.cpp',
+  'src/modules/timer/wrap_Timer.cpp',
+  'src/modules/window/ppapi/Module.cpp',
+  'src/modules/window/ppapi/Window.cpp',
+  'src/modules/window/Window.cpp',
+]
+
+LOVE_INCLUDE_DIRS = [
+  'src',
+  'src/modules',
+  'src/libraries',
+  '$nacl_sdk_root/include',
+  'third_party/include',
+  'third_party/include/SDL',
+]
+
+LOVE_DEFINES = [
+  'LOVE_OLD_MODPLUG',
+]
+
+LOVE_LIB_DIRS = [
+  '$nacl_sdk_root/lib/newlib_{arch}/Release',
+  'third_party/lib/newlib_{arch}',
+]
+
+LOVE_LIBS = [
+  'vorbisfile',
+  'vorbis',
+  'ogg',
+  'openal',
+  'physfs',
+  'nacl_io',
+  'SDL',
+  'modplug',
+  'mpg123',
+  'freetype',
+  'IL',
+  'mng',
+  'jpeg',
+  'png',
+  'z',
+  'tiff',
+  'lua',
+  'm',
+  'ppapi_gles2',
+  'ppapi_cpp',
+  'ppapi',
+  'nosys',
+]
+
+for b in sources.ForEach(name='love', inf=LOVE_SOURCES, **arch_config):
+  b.Set('ccflags', Prefix('-I', LOVE_INCLUDE_DIRS))
+  b.Append('ccflags', Prefix('-D', LOVE_DEFINES))
+
+for b in exe.ForEach(name='love', **arch_config):
+  b.Set('ldflags', Prefix('-L', LOVE_LIB_DIRS))
+  b.Set('ldflags', Prefix('-l', LOVE_LIBS))
+  b.Set('inputs', Select('love-sources').And(keys=b.keys).outputs)
+
+for b in nmf.ForEach(name='love', config=CONFIGS):
+  b.Append('inputs',
+    Select('love-exe').And(keys=b.SubKeys('config')).outputs)
+
+
+################################################################################
+
+for b in Select(keys={'config': 'debug'}).And(rule='cc'):
+  b.Append('ccflags', '-g -O0')
+for b in Select(keys={'config': 'release'}).And(rule='cc'):
+  b.Append('ccflags', '-g -O3')
+for b in Select(rule='cc'):
+  ext = Filename(b.inputs).Extension
+  if ext in ('.cc', '.cpp'):
+    b.Set('cc', '$cxx-{arch}')
+  elif ext == '.c':
+    b.Set('cc', '$cc-{arch}')
+for b in Select(rule='link'):
+  b.Set('cc', '$cxx-{arch}')
+for b in Select(rule='ar'):
+  b.Set('ar', '$ar-{arch}')
