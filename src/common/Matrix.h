@@ -56,6 +56,14 @@ namespace love
 		~Matrix();
 
 		/**
+		 * Determines whether two matrices have equal components.
+		 * Floatiing-point inaccuracies are not accounted for!
+		 * @param m The Matrix to compare to this Matrix.
+		 **/
+		bool operator == (const Matrix &m) const;
+		bool operator != (const Matrix &m) const;
+
+		/**
 		* Multiplies this Matrix with another Matrix, changing neither.
 		* @param m The Matrix to multiply with this Matrix.
 		* @return The combined matrix.
@@ -158,6 +166,14 @@ namespace love
 		* @param size The number of vertices.
 		**/
 		void transform(vertex * dst, const vertex * src, int size) const;
+
+		/**
+		 * Creates an orthographic projection Matrix with near and far clipping
+		 * planes at -1.0 and 1.0, respectively.
+		 * Similar to http://www.opengl.org/sdk/docs/man2/xhtml/glOrtho.xml
+		 * @param left, right, bottom, top Clipping planes.
+		 **/
+		static Matrix ortho(float left, float right, float bottom, float top);
 
 	}; // Matrix
 

@@ -44,6 +44,7 @@ namespace gles2
 	class Image;
 	class Quad;
 	class VertexBuffer;
+        class VertexIndex;
 
 	class SpriteBatch : public Drawable
 	{
@@ -64,7 +65,7 @@ namespace gles2
 		Color * color;
 
 		VertexBuffer *array_buf;
-		VertexBuffer *element_buf;
+		VertexIndex *element_buf;
 
 	public:
 

@@ -41,7 +41,7 @@
 #include "SpriteBatch.h"
 #include "ParticleSystem.h"
 #include "Canvas.h"
-#include "PixelEffect.h"
+#include "Shader.h"
 
 namespace love
 {
@@ -281,7 +281,7 @@ namespace gles2
 
 		Canvas * newCanvas(int width, int height);
 
-		PixelEffect * newPixelEffect(const std::string& code);
+		Shader *newShader(const Shader::ShaderSources &sources);
 
 		/**
 		* Sets the foreground color.

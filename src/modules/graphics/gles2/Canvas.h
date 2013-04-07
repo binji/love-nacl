@@ -29,6 +29,7 @@
 #include <image/ImageData.h>
 #include <common/math.h>
 #include <common/Matrix.h>
+#include "Context.h"
 #include "OpenGL.h"
 
 namespace love
@@ -76,9 +77,10 @@ namespace gles2
 		bool loadVolatile();
 		void unloadVolatile();
 
+		GLuint getTextureName() const { return img; }
+
 	private:
 		friend class PixelEffect;
-		GLuint getTextureName() const { return img; }
 
 		GLsizei width;
 		GLsizei height;
@@ -90,6 +92,10 @@ namespace gles2
 
 		GLenum status;
 
+		// Viewport used by the previously bound canvas.
+		Context::Viewport savedViewport;
+
+
 		struct {
 			Image::Filter filter;
 			Image::Wrap wrap;
@@ -100,6 +106,7 @@ namespace gles2
 		GLenum createFBO(GLuint& framebuffer, GLuint& depth_stencil,  GLuint& img, int width, int height);
 		void deleteFBO(GLuint framebuffer, GLuint depth_stencil,  GLuint img);
 		void bindFBO(GLuint framebuffer);
+		GLuint createStencil(int width, int height);
 
 	};
 

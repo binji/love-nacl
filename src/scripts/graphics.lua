@@ -1244,6 +1244,8 @@ do
 	AAIAAAxQCuxfDzz1AB8IAAAAAAC6ufC4AAAAALrCZ5H+if4dCkwHbQAAAAgAAQAAAAAAAA==
 	]], "Vera.ttf", "base64")
 
+        local table_concat = table.concat
+
 	love.graphics.newFont = function(font, size)
 		if type(font) == "number" or not font then
 			size = font
@@ -1274,30 +1276,139 @@ do
 		love.graphics.printf = love.graphics.printf1
 	end
 
-	-- PIXEL EFFECTS
-	function love.graphics._effectCodeToGLSL(code)
-		local header = [[#version 120
-		#define number float
-		#define Image sampler2D
-		#define extern uniform
-		#define Texel texture2D
-		uniform sampler2D _tex0_;]]
-		local footer = [[void main() {
-			// fix weird crashing issue in OSX when _tex0_ is unused within effect()
-			float dummy = texture2D(_tex0_, vec2(.5)).r;
-			gl_FragColor = effect(gl_Color, _tex0_, gl_TexCoord[0].xy, gl_FragCoord.xy);
-		}]]
+	-- SHADERS
 
-		local function include(quoted_path) return (love.filesystem.read(quoted_path:sub(2,-2))) end
-		code = code:gsub("#include (%b'')", include)
-		code = code:gsub('#include (%b"")', include)
+	local GLSLES_VERSION = "#version 100"
 
-		return table.concat{header, "\n", code, footer}
+	local GLSL_SYNTAX = [[
+#define number float
+#define Image sampler2D
+#define extern uniform
+#define Texel texture2D
+#extension all: disable]]
+
+	local GLSLES_UNIFORMS = [[
+uniform mat4 ModelViewMatrix;
+uniform mat4 ProjectionMatrix;
+uniform mat4 ModelViewProjectionMatrix;
+uniform mat3 NormalMatrix;
+//uniform float PointSize = 1.0;
+uniform float PointSize;
+uniform sampler2D _tex0_;]]
+
+	local GLSLES_ATTRIBUTES = [[
+attribute highp vec4 VertexPosition;
+attribute lowp vec4 VertexColor;
+attribute mediump vec4 VertexTexCoord;]]
+
+	local GLSLES_VARYINGS = [[
+varying lowp vec4 VaryingColor;
+varying mediump vec2 VaryingTexCoord;]]
+
+	local GLSLES_PRECISION_PIXEL = [[
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif]]
+
+	local GLSLES_MAIN_VERTEX = [[
+void main() {
+	VaryingColor = VertexColor;
+	VaryingTexCoord = VertexTexCoord.st;
+	gl_PointSize = PointSize;
+	gl_Position = position(ModelViewProjectionMatrix, VertexPosition);
+}]]
+
+	local GLSL_MAIN_PIXEL = [[
+void main() {
+	// fix crashing issue in OSX when _tex0_ is unused within effect()
+	float dummy = texture2D(_tex0_, vec2(.5)).r;
+	gl_FragColor = effect(VaryingColor, _tex0_, VaryingTexCoord, gl_FragCoord.xy);
+}]]
+
+
+	local function stripPrecisionQualifiers(code)
+		-- e.g. "precision highp float;"
+		code = code:gsub("precision(%s+)(%a+)(%s+)([^%s;]+);", "")
+
+		-- e.g. "lowp vec4 color;"
+		code = code:gsub("highp", "")
+		code = code:gsub("mediump", "")
+		code = code:gsub("lowp", "")
+
+		return code
+	end
+
+	local function createVertexCode(vertexcode)
+		local vertexcodes = {
+			GLSLES_VERSION,
+			"#define VERTEX",
+			GLSL_SYNTAX,
+			GLSLES_ATTRIBUTES,
+			GLSLES_VARYINGS,
+			GLSLES_UNIFORMS,
+			"#line 0",
+			vertexcode,
+			GLSLES_MAIN_VERTEX,
+		}
+		return table_concat(vertexcodes, "\n")
+	end
+
+	local function createPixelCode(pixelcode)
+		local pixelcodes = {
+			GLSLES_VERSION,
+			"#define PIXEL",
+			GLSLES_PRECISION_PIXEL,
+			GLSL_SYNTAX,
+			GLSLES_VARYINGS,
+			GLSLES_UNIFORMS,
+			"#line 0",
+			pixelcode,
+			GLSL_MAIN_PIXEL,
+		}
+		return table_concat(pixelcodes, "\n")
+	end
+
+	function love.graphics._shaderCodeToGLSL(vertexcode, pixelcode)
+		if vertexcode then
+			local s = vertexcode:gsub("\r\n\t", " ")
+			s = s:gsub("(%w+)(%s+)%(", "%1(")
+			if s:match("vec4%s*effect%(") then
+				pixelcode = vertexcode -- first argument contains pixel shader code
+			end
+			if not s:match("vec4%s*position%(") then
+				vertexcode = nil -- first argument doesn't contain vertex shader code
+			end
+		end
+		if pixelcode then
+			local s = pixelcode:gsub("\r\n\t", " ")
+			s = s:gsub("(%w+)(%s+)%(", "%1(")
+			if s:match("vec4%s*position%(") then
+				vertexcode = pixelcode -- second argument contains vertex shader code
+			end
+			if not s:match("vec4%s*effect%(") then
+				pixelcode = nil -- second argument doesn't contain pixel shader code
+			end
+		end
+
+		if vertexcode then
+			vertexcode = createVertexCode(vertexcode)
+		end
+		if pixelcode then
+			pixelcode = createPixelCode(pixelcode)
+		end
+--                print('vertexcode, after:', vertexcode)
+--                print('pixelcode, after:', pixelcode)
+
+
+		return vertexcode, pixelcode
 	end
 
 	function love.graphics._transformGLSLErrorMessages(message)
-		if not message:match("Cannot compile shader") then return message end
-		local lines = {"Cannot compile shader:"}
+		local shadertype = message:match("Cannot compile (%a+) shader code")
+		if not shadertype then return message end
+		local lines = {"Cannot compile "..shadertype.." shader code:"}
 		for l in message:gmatch("[^\n]+") do
 			-- nvidia compiler message:
 			-- 0(<linenumber>) : error/warning [NUMBER]: <error message>
@@ -1306,20 +1417,27 @@ do
 				-- ati compiler message:
 				-- ERROR 0:<linenumber>: error/warning(#[NUMBER]) [ERRORNAME]: <errormessage>
 				linenumber, what, message = l:match("^%w+: 0:(%d+):%s*(%w+)%([^%)]+%)%s*(.+)$")
+				if not linenumber then
+					-- OSX compiler message (?):
+					-- ERROR: 0:<linenumber>: <errormessage>
+					what, linenumber, message = l:match("^(%w+): %d+:(%d+): (.+)$")
+				end
 			end
 			if linenumber and what and message then
-				lines[#lines+1] = ("Line %d: %s: %s"):format(linenumber - 5, what, message)
+				lines[#lines+1] = ("Line %d: %s: %s"):format(linenumber, what, message)
 			end
 		end
 		-- did not match any known error messages
 		if #lines == 1 then return message end
-		return table.concat(lines, "\n")
+		return table_concat(lines, "\n")
 	end
 
 	-- helper to transform a matrix from {{a,b,c}, {d,e,f}, ...} to
 	-- {a, b, c, d, e, f, ...}
 	local function flattenMatrices(mat, ...)
 		if not mat then return end
+
+		local tonumber = tonumber
 
 		local ret,l = {}, 1
 		ret.dimension = #mat
@@ -1334,41 +1452,85 @@ do
 	end
 
 	-- automagic uniform setter
-	local function pixeleffect_dispatch_send(self, name, value, ...)
-		if type(value) == "number" then         -- scalar
+	local function shader_dispatch_send(self, name, value, ...)
+		local valuetype = type(value)
+		if valuetype == "number" or valuetype == "boolean" then -- scalar
 			self:sendFloat(name, value, ...)
-		elseif type(value) == "userdata" and value:typeOf("Image") then
+		elseif valuetype == "userdata" and value:typeOf("Image") then
 			self:sendImage(name, value)
-		elseif type(value) == "userdata" and value:typeOf("Canvas") then
+		elseif valuetype == "userdata" and value:typeOf("Canvas") then
 			self:sendCanvas(name, value)
-		elseif type(value) == "table" then      -- vector or matrix
-			if type(value[1]) == "number" then
+		elseif valuetype == "table" then      -- vector or matrix
+			valuetype = type(value[1])
+			if valuetype == "number" or valuetype == "boolean" then
 				self:sendFloat(name, value, ...)
-			elseif type(value[1]) == "table" then
+			elseif valuetype == "table" then
 				self:sendMatrix(name, flattenMatrices(value, ...))
 			else
-				error("Cannot send value (unsupported type: {"..type(value[1]).."}).")
+				error("Cannot send value (unsupported type: {"..valuetype.."}).")
 			end
 		else
-			local t = type(value)
-			if t == "userdata" and value.type then t = valye.type end
-			error("Cannot send value (unsupported type: "..t..").")
+			if valuetype == "userdata" and value.type then valuetype = value.type end
+			error("Cannot send value (unsupported type: "..valuetype..").")
 		end
 	end
 
-	local newPixelEffect = love.graphics.newPixelEffect
-	function love.graphics.newPixelEffect(code)
-		love.graphics.newPixelEffect = function(code)
-			if love.filesystem and love.filesystem.exists(code) then
-				code = love.filesystem.read(code)
+	local newShader = love.graphics.newShader
+	function love.graphics.newShader(vertexcode, pixelcode)
+		love.graphics.newShader = newShader
+
+		local shader = newShader(vertexcode, pixelcode)
+		local meta = getmetatable(shader)
+		meta.send = shader_dispatch_send
+		meta.sendBoolean = meta.sendFloat
+		return shader
+	end
+
+	local defaultvertex = [[
+vec4 position(mat4 mvp_matrix, vec4 vertex)
+{
+	return mvp_matrix * vertex;
+}]]
+	local defaultpixel = [[
+vec4 effect(vec4 vcolor, Image texture, vec2 texcoord, vec2 pixcoord)
+{
+	return vcolor * Texel(texture, texcoord);
+}]]
+
+	love.graphics.setDefaultShaderSources(defaultvertex, defaultpixel)
+
+	local defaultshader
+	local function makeDefaultShader()
+--		if not defaultshader and love.graphics.isSupported("shader") and love.graphics.getRenderer() == "opengl es" then
+		if not defaultshader and love.graphics.isSupported("shader") then
+			defaultshader = love.graphics.newShader(defaultvertex, defaultpixel)
+		end
+		return defaultshader
+	end
+
+	-- setting the default shader to nil will reset it to the passthrough shader in OpenGL ES 2
+	local _setDefaultShader = love.graphics.setDefaultShader
+	function love.graphics.setDefaultShader(shader)
+--		if love.graphics.getRenderer() == "opengl es" and shader == nil then
+		if shader == nil then
+			shader = makeDefaultShader()
+		end
+		return _setDefaultShader(shader)
+	end
+
+	local _setMode = love.graphics.setMode
+	function love.graphics.setMode(...)
+		local success = _setMode(...)
+
+		-- make sure we always have a default shader in OpenGL ES 2
+		if success then
+			if not love.graphics.getDefaultShader() then
+				local defaultshader = makeDefaultShader()
+				love.graphics.setDefaultShader(defaultshader)
 			end
-			return newPixelEffect(code)
+			love.graphics.setMode = _setMode
 		end
 
-		local effect = love.graphics.newPixelEffect(code)
-		local meta = getmetatable(effect)
-		meta.send = pixeleffect_dispatch_send
-		return effect
+		return success
 	end
-
 end

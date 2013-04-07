@@ -50,6 +50,22 @@ namespace love
 	// | e2 e6 e10 e14 |
 	// | e3 e7 e11 e15 |
 
+	bool Matrix::operator == (const love::Matrix &m) const
+	{
+	        for (int i = 0; i < 16; i++)
+	        {
+	                if (e[i] != m.e[i])
+	                        return false;
+	        }
+	
+	        return true;
+	}
+	
+	bool Matrix::operator != (const love::Matrix &m) const
+	{
+                return !(*this == m);
+	}
+
 	Matrix Matrix::operator * (const Matrix & m) const
 	{
 		Matrix t;
@@ -190,6 +206,20 @@ namespace love
 			dst[i].x = x;
 			dst[i].y = y;
 		}
+	}
+
+	Matrix Matrix::ortho(float left, float right, float bottom, float top)
+	{
+		Matrix m;
+	
+		m.e[0] = 2.0f / (right - left);
+		m.e[5] = 2.0f / (top - bottom);
+		m.e[10] = -1.0;
+	
+		m.e[12] = -(right + left) / (right - left);
+		m.e[13] = -(top + bottom) / (top - bottom);
+	
+		return m;
 	}
 
 

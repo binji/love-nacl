@@ -2,8 +2,7 @@
 
 #ARCHES=('x86_32', 'x86_64', 'arm')
 ARCHES=('x86_32', 'x86_64')
-#CONFIGS=('debug', 'release')
-CONFIGS=('debug',)
+CONFIGS=('debug', 'release')
 arch_config={'arch': ARCHES, 'config': CONFIGS}
 
 Variable('nacl_sdk_root', Args['nacl_sdk_root'])
@@ -138,13 +137,14 @@ LOVE_SOURCES = [
   'src/modules/graphics/Drawable.cpp',
   'src/modules/graphics/DrawQable.cpp',
   'src/modules/graphics/gles2/Canvas.cpp',
+  'src/modules/graphics/gles2/Context.cpp',
   'src/modules/graphics/gles2/Font.cpp',
   'src/modules/graphics/gles2/Graphics.cpp',
   'src/modules/graphics/gles2/Image.cpp',
   'src/modules/graphics/gles2/OpenGL.cpp',
   'src/modules/graphics/gles2/ParticleSystem.cpp',
-  'src/modules/graphics/gles2/PixelEffect.cpp',
   'src/modules/graphics/gles2/Quad.cpp',
+  'src/modules/graphics/gles2/Shader.cpp',
   'src/modules/graphics/gles2/SpriteBatch.cpp',
   'src/modules/graphics/gles2/VertexBuffer.cpp',
   'src/modules/graphics/gles2/wrap_Canvas.cpp',
@@ -152,9 +152,9 @@ LOVE_SOURCES = [
   'src/modules/graphics/gles2/wrap_Graphics.cpp',
   'src/modules/graphics/gles2/wrap_Image.cpp',
   'src/modules/graphics/gles2/wrap_ParticleSystem.cpp',
-  'src/modules/graphics/gles2/wrap_PixelEffect.cpp',
   'src/modules/graphics/gles2/wrap_Quad.cpp',
   'src/modules/graphics/gles2/wrap_SpriteBatch.cpp',
+  'src/modules/graphics/gles2/wrap_Shader.cpp',
   'src/modules/graphics/Graphics.cpp',
   'src/modules/graphics/Image.cpp',
   'src/modules/graphics/Quad.cpp',

@@ -50,7 +50,8 @@ namespace graphics
 
 		enum BlendMode
 		{
-			BLEND_ALPHA = 1,
+			BLEND_NONE,
+			BLEND_ALPHA,
 			BLEND_ADDITIVE,
 			BLEND_SUBTRACTIVE,
 			BLEND_MULTIPLICATIVE,
@@ -83,7 +84,7 @@ namespace graphics
 		enum Support
 		{
 			SUPPORT_CANVAS = 1,
-			SUPPORT_PIXELEFFECT,
+			SUPPORT_SHADER,
 			SUPPORT_NPOT,
 			SUPPORT_SUBTRACTIVE,
 			SUPPORT_MAX_ENUM

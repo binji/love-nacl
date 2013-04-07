@@ -138,12 +138,13 @@ namespace gles2
 
 		static bool hasNpot();
 
+		GLuint getTextureName() const { return texture; }
+
 	private:
 
 		void drawv(const Matrix & t, const vertex * v) const;
 
 		friend class PixelEffect;
-		GLuint getTextureName() const { return texture; }
 
 	}; // Image
 

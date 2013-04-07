@@ -24,6 +24,7 @@
 #include <iostream>
 
 // LOVE
+#include "Context.h"
 #include "Image.h"
 #include "Quad.h"
 #include "VertexBuffer.h"
@@ -42,8 +43,6 @@ namespace gles2
 		, array_buf(0)
 		, element_buf(0)
 	{
-		image->retain();
-
 		GLenum gl_usage;
 
 		switch (usage)
@@ -60,33 +59,27 @@ namespace gles2
 			break;
 		}
 
-		int vertex_size = sizeof(vertex) * 4 * size;
-		int element_size = sizeof(GLushort) * 6 * size;
+		const size_t vertex_size = sizeof(vertex) * 4 * size;
 
-		array_buf = VertexBuffer::Create(vertex_size, GL_ARRAY_BUFFER, gl_usage);
-		element_buf = VertexBuffer::Create(element_size, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW);
-
-		// Fill element buffer.
+		try
 		{
-			VertexBuffer::Bind bind(*element_buf);
-			VertexBuffer::Mapper mapper(*element_buf);
-
-			GLushort *indices = static_cast<GLushort*>(mapper.get());
-
-			if (indices)
-			{
-				for (int i = 0; i < size; ++i)
-				{
-					indices[i*6+0] = 0+(i*4);
-					indices[i*6+1] = 1+(i*4);
-					indices[i*6+2] = 2+(i*4);
-
-					indices[i*6+3] = 0+(i*4);
-					indices[i*6+4] = 2+(i*4);
-					indices[i*6+5] = 3+(i*4);
-				}
-			}
+			array_buf = VertexBuffer::Create(vertex_size, GL_ARRAY_BUFFER, gl_usage);
+			element_buf = new VertexIndex(size);
 		}
+		catch (love::Exception &)
+		{
+			delete array_buf;
+			delete element_buf;
+			throw;
+		}
+		catch (std::bad_alloc &)
+		{
+			delete array_buf;
+			delete element_buf;
+			throw love::Exception("Out of memory.");
+		}
+
+		image->retain();
 	}
 
 	SpriteBatch::~SpriteBatch()
@@ -196,45 +189,43 @@ namespace gles2
 
 	void SpriteBatch::draw(float x, float y, float angle, float sx, float sy, float ox, float oy, float kx, float ky) const
 	{
-          // TODO(binji): implement
-#if 0
 		const int color_offset = 0;
 		const int vertex_offset = sizeof(unsigned char) * 4;
 		const int texel_offset = sizeof(unsigned char) * 4 + sizeof(float) * 2;
 
+		Context *ctx = getContext();
+
 		static Matrix t;
-
-		glPushMatrix();
-
 		t.setTransformation(x, y, angle, sx, sy, ox, oy, kx, ky);
-		glMultMatrixf((const GLfloat*)t.getElements());
+
+		ctx->modelViewStack.push(ctx->modelViewStack.top());
+		ctx->modelViewStack.top() *= t;
 
 		image->bind();
 
 		VertexBuffer::Bind array_bind(*array_buf);
-		VertexBuffer::Bind element_bind(*element_buf);
+		VertexBuffer::Bind element_bind(*element_buf->getVertexBuffer());
+
+		ctx->useVertexAttribArrays(Context::ATTRIB_VERTEX | Context::ATTRIB_TEXCOORD);
+
+		ctx->vertexAttribPointer(Context::ATTRIB_VERTEX, 2, GL_FLOAT, sizeof(vertex), array_buf->getPointer(vertex_offset));
+		ctx->vertexAttribPointer(Context::ATTRIB_TEXCOORD, 2, GL_FLOAT, sizeof(vertex), array_buf->getPointer(texel_offset));
 
 		// Apply per-sprite color, if a color is set.
 		if (color)
 		{
-			glEnableClientState(GL_COLOR_ARRAY);
-			glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(vertex), array_buf->getPointer(color_offset));
+			ctx->setVertexAttribArray(Context::ATTRIB_COLOR, true);
+			ctx->vertexAttribPointer(Context::ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, sizeof(vertex), array_buf->getPointer(color_offset));
 		}
 
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glVertexPointer(2, GL_FLOAT, sizeof(vertex), array_buf->getPointer(vertex_offset));
+		ctx->setupRender();
+		glDrawElements(GL_TRIANGLES, element_buf->getIndexCount(next), element_buf->getType(), element_buf->getPointer(0));
 
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), array_buf->getPointer(texel_offset));
+		// Current color is undefined after drawing a vertex array with the color attribute.
+		if (color)
+			ctx->setColor(ctx->getColor());
 
-		glDrawElements(GL_TRIANGLES, next*6, GL_UNSIGNED_SHORT, element_buf->getPointer(0));
-
-		glDisableClientState(GL_VERTEX_ARRAY);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glDisableClientState(GL_COLOR_ARRAY);
-
-		glPopMatrix();
-#endif
+		ctx->modelViewStack.pop();
 	}
 
 	void SpriteBatch::addv(const vertex * v, int index)

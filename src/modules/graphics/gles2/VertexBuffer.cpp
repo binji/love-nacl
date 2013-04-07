@@ -23,6 +23,7 @@
 #include "common/Exception.h"
 #include <common/config.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 
@@ -79,14 +80,14 @@ namespace gles2
 			throw love::Exception("Out of memory (oh the humanity!)");
                 // TODO(binji): implement
 		// glGetBufferSubData(getTarget(), 0, getSize(), mapped);
+                memset(mapped, 0, getSize());
 
 		return mapped;
 	}
 
 	void VBO::unmap()
 	{
-                // TODO(binji): implement
-		// glBufferSubData(getTarget(), 0, getSize(), mapped);
+		glBufferSubData(getTarget(), 0, getSize(), mapped);
 		free(mapped);
 		mapped = 0;
 	}
@@ -173,6 +174,172 @@ namespace gles2
 
 		glDeleteBuffers(1, &vbo);
 		vbo = 0;
+	}
+
+	// VertexIndex
+	
+	size_t VertexIndex::maxSize = 0;
+	size_t VertexIndex::elementSize = 0;
+	std::list<size_t> VertexIndex::sizeRefs;
+	VertexBuffer *VertexIndex::element_array = NULL;
+	
+	VertexIndex::VertexIndex(size_t size)
+		: size(size)
+	{
+		// The upper limit is the maximum of GLuint divided by six (the number
+		// of indices per size) and divided by the size of GLuint. This guarantees
+		// no overflows when calculating the array size in bytes.
+		// Memory issues will be handled by other exceptions.
+		if (size == 0 || size > ((GLuint) -1) / 6 / sizeof(GLuint))
+			throw love::Exception("Invalid size.");
+	
+		addSize(size);
+	}
+	
+	VertexIndex::~VertexIndex()
+	{
+		removeSize(size);
+	}
+	
+	size_t VertexIndex::getSize() const
+	{
+		return size;
+	}
+	
+	size_t VertexIndex::getIndexCount(size_t elements) const
+	{
+		return elements * 6;
+	}
+	
+	GLenum VertexIndex::getType(size_t s) const
+	{
+#if 0
+		// OpenGL ES 2.0 doesn't guarantee support for unsigned int vertex indices.
+		if (GLEW_ES_VERSION_2_0 && !GLEW_OES_element_index_uint)
+			return GL_UNSIGNED_SHORT;
+	
+		// Calculates if unsigned short is big enough to hold all the vertex indices.
+		static const GLenum type_table[] = {GL_UNSIGNED_SHORT, GL_UNSIGNED_INT};
+		return type_table[s * 4 > std::numeric_limits<GLushort>::max()];
+		// if buffer-size > max(GLushort) then GL_UNSIGNED_INT else GL_UNSIGNED_SHORT
+#endif
+		return GL_UNSIGNED_SHORT;
+	}
+	
+	size_t VertexIndex::getElementSize()
+	{
+		return elementSize;
+	}
+	
+	VertexBuffer *VertexIndex::getVertexBuffer() const
+	{
+		return element_array;
+	}
+	
+	const void *VertexIndex::getPointer(size_t offset) const
+	{
+		return element_array->getPointer(offset);
+	}
+	
+	void VertexIndex::addSize(size_t newSize)
+	{
+		if (newSize <= maxSize)
+		{
+			// Current size is bigger. Append the size to list and sort.
+			sizeRefs.push_back(newSize);
+			sizeRefs.sort();
+			return;
+		}
+	
+		// Try to resize before adding it to the list because resize may throw.
+		resize(newSize);
+		sizeRefs.push_back(newSize);
+	}
+	
+	void VertexIndex::removeSize(size_t oldSize)
+	{
+		// TODO: For debugging purposes, this should check if the size was actually found.
+		sizeRefs.erase(std::find(sizeRefs.begin(), sizeRefs.end(), oldSize));
+		if (sizeRefs.size() == 0)
+		{
+			resize(0);
+			return;
+		}
+	
+		if (oldSize == maxSize)
+		{
+			// Shrink if there's a smaller size.
+			size_t newSize = sizeRefs.back();
+			if (newSize < maxSize)
+				resize(newSize);
+		}
+	}
+	
+	void VertexIndex::resize(size_t size)
+	{
+		if (size == 0)
+		{
+			delete element_array;
+			element_array = NULL;
+			maxSize = 0;
+			return;
+		}
+	
+		VertexBuffer *new_element_array;
+	
+		// Depending on the size, a switch to int and more memory is needed.
+		GLenum target_type = getType(size);
+		size_t elem_size = (target_type == GL_UNSIGNED_SHORT) ? sizeof(GLushort) : sizeof(GLuint);
+	
+		size_t array_size = elem_size * 6 * size;
+	
+		// Create may throw out-of-memory exceptions.
+		// VertexIndex will propagate the exception and keep the old VertexBuffer.
+		try
+		{
+			new_element_array = VertexBuffer::Create(array_size, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW);
+		}
+		catch (std::bad_alloc &)
+		{
+			throw love::Exception("Out of memory.");
+		}
+	
+		// Allocation of the new VertexBuffer succeeded.
+		// The old VertexBuffer can now be deleted.
+		delete element_array;
+		element_array = new_element_array;
+		maxSize = size;
+		elementSize = elem_size;
+	
+		switch (target_type)
+		{
+		case GL_UNSIGNED_SHORT:
+			fill<GLushort>();
+			break;
+		case GL_UNSIGNED_INT:
+			fill<GLuint>();
+			break;
+		}
+	}
+	
+	template <typename T>
+	void VertexIndex::fill()
+	{
+		VertexBuffer::Bind bind(*element_array);
+		VertexBuffer::Mapper mapper(*element_array);
+	
+		T *indices = (T *) mapper.get();
+	
+		for (size_t i = 0; i < maxSize; ++i)
+		{
+			indices[i*6+0] = i * 4 + 0;
+			indices[i*6+1] = i * 4 + 1;
+			indices[i*6+2] = i * 4 + 2;
+	
+			indices[i*6+3] = i * 4 + 0;
+			indices[i*6+4] = i * 4 + 2;
+			indices[i*6+5] = i * 4 + 3;
+		}
 	}
 
 } // gles2

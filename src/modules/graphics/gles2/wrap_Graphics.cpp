@@ -389,30 +389,96 @@ namespace gles2
 		return 1;
 	}
 
-	int w_newPixelEffect(lua_State * L)
+	int w_newShader(lua_State * L)
 	{
-		if (!PixelEffect::isSupported())
-			return luaL_error(L, "Sorry, your graphics card does not support pixel effects.");
+		if (!Shader::isSupported())
+			return luaL_error(L, "Sorry, your graphics card does not support shaders.");
+
+		// clamp stack to 2 elements
+		lua_settop(L, 2);
+
+		// read any filepath arguments
+		for (int i = 1; i <= 2; i++)
+		{
+			if (!lua_isstring(L, i))
+				continue;
+
+			// call love.filesystem.isFile(arg_i)
+			luax_getfunction(L, "filesystem", "isFile");
+			lua_pushvalue(L, i);
+			lua_call(L, 1, 1);
+
+			bool isFile = luax_toboolean(L, -1);
+			lua_pop(L, 1);
+
+			if (isFile)
+			{
+				luax_getfunction(L, "filesystem", "read");
+				lua_pushvalue(L, i);
+				lua_call(L, 1, 1);
+				lua_replace(L, i);
+			}
+		}
+
+		bool has_arg1 = lua_isstring(L, 1);
+		bool has_arg2 = lua_isstring(L, 2);
+
+		// require at least one string argument
+		if (!(has_arg1 || has_arg2))
+			luaL_checkstring(L, 1);
+
+		luax_getfunction(L, "graphics", "_shaderCodeToGLSL");
+
+		// push vertexcode and pixelcode strings to the top of the stack
+		lua_pushvalue(L, 1);
+		lua_pushvalue(L, 2);
+
+		// call effectCodeToGLSL, returned values will be at the top of the stack
+		if (lua_pcall(L, 2, 2, 0) != 0)
+			return luaL_error(L, "%s", lua_tostring(L, -1));
+
+		Shader::ShaderSources sources;
+
+		// vertex shader code
+		if (lua_isstring(L, -2))
+		{
+			std::string vertexcode(luaL_checkstring(L, -2));
+			sources[Shader::TYPE_VERTEX] = vertexcode;
+		}
+		else if (has_arg1 && has_arg2)
+			return luaL_error(L, "Could not parse vertex shader code (missing 'position' function?)");
+
+		// pixel shader code
+		if (lua_isstring(L, -1))
+		{
+			std::string pixelcode(luaL_checkstring(L, -1));
+			sources[Shader::TYPE_PIXEL] = pixelcode;
+		}
+		else if (has_arg1 && has_arg2)
+			return luaL_error(L, "Could not parse pixel shader code (missing 'effect' function?)");
+
+		if (sources.empty())
+		{
+			// Original args had source code, but effectCodeToGLSL couldn't translate it
+			for (int i = 1; i <= 2; i++)
+			{
+				if (lua_isstring(L, i))
+					return luaL_argerror(L, i, "missing 'position' or 'effect' function?");
+			}
+		}
 
 		try
 		{
-			luaL_checkstring(L, 1);
-
-			luax_getfunction(L, "graphics", "_effectCodeToGLSL");
-			lua_pushvalue(L, 1);
-			lua_pcall(L, 1, 1, 0);
-
-			const char* code = lua_tostring(L, -1);
-			PixelEffect * effect = instance->newPixelEffect(code);
-			luax_newtype(L, "PixelEffect", GRAPHICS_PIXELEFFECT_T, (void*)effect);
+			Shader *shader = instance->newShader(sources);
+			luax_newtype(L, "Shader", GRAPHICS_SHADER_T, (void *)shader);
 		}
-		catch (const love::Exception& e)
+		catch (const love::Exception &e)
 		{
-			// memory is freed in Graphics::newPixelEffect
+			// memory is freed in Graphics::newShader
 			luax_getfunction(L, "graphics", "_transformGLSLErrorMessages");
 			lua_pushstring(L, e.what());
-			lua_pcall(L, 1,1, 0);
-			const char* err = lua_tostring(L, -1);
+			lua_pcall(L, 1, 1, 0);
+			const char *err = lua_tostring(L, -1);
 			return luaL_error(L, "%s", err);
 		}
 
@@ -749,32 +815,133 @@ namespace gles2
 		return 1;
 	}
 
-	int w_setPixelEffect(lua_State * L)
+	int w_setShader(lua_State * L)
 	{
+		Shader *oldshader = Shader::currentShader;
+
 		if (lua_isnoneornil(L,1))
 		{
-			PixelEffect::detach();
+			Shader::detach();
 			return 0;
 		}
 
-		PixelEffect * effect = luax_checkpixeleffect(L, 1);
-		effect->attach();
+		Shader *shader = luax_checkshader(L, 1);
+		shader->attach();
+
+		if (shader != Shader::defaultShader)
+			shader->retain();
+
+		if (oldshader && oldshader != Shader::defaultShader)
+			oldshader->release();
+
 		return 0;
 	}
 	
-	int w_getPixelEffect(lua_State * L)
+	int w_getShader(lua_State * L)
 	{
-		PixelEffect * effect = PixelEffect::current;
-		if (effect)
+		Shader *shader = Shader::currentShader;
+		if (shader && shader != Shader::defaultShader)
 		{
-			effect->retain();
-			luax_newtype(L, "PixelEffect", GRAPHICS_PIXELEFFECT_T, (void*) effect);
+			shader->retain();
+			luax_newtype(L, "Shader", GRAPHICS_SHADER_T, (void *) shader);
 		}
 		else
 			lua_pushnil(L);
-		
+
 		return 1;
 	}
+
+	int w_setDefaultShader(lua_State *L)
+	{
+		if (lua_isnoneornil(L, 1))
+		{
+			if (Shader::defaultShader)
+				Shader::defaultShader->release();
+	
+			Shader::defaultShader = 0;
+	
+			return 0;
+		}
+	
+		Shader *shader = luax_checkshader(L, 1);
+	
+		// make sure the default shader will have both vertex and pixel source codes
+		const Shader::ShaderSources &sources = shader->getSources();
+		Shader::ShaderSources::const_iterator it;
+		if (sources.find(Shader::TYPE_VERTEX) == sources.end() || sources.find(Shader::TYPE_PIXEL) == sources.end())
+			return luaL_error(L, "Default shader must have both vertex and pixel source codes.");
+	
+		Shader *prevdefault = Shader::defaultShader;
+	
+		Shader::defaultShader = shader;
+	
+		shader->retain();
+	
+		if (prevdefault)
+			prevdefault->release();
+	
+		if (!Shader::currentShader || Shader::currentShader == prevdefault)
+			shader->attach();
+	
+		return 0;
+	}
+
+	int w_getDefaultShader(lua_State *L)
+	{
+		Shader *shader = Shader::defaultShader;
+		if (shader)
+		{
+			shader->retain();
+			luax_newtype(L, "Shader", GRAPHICS_SHADER_T, (void *) shader);
+		}
+		else
+			lua_pushnil(L);
+	
+		return 1;
+	}
+
+	int w_setDefaultShaderSources(lua_State *L)
+	{
+		// clamp stack to 2 elements
+		lua_settop(L, 2);
+	
+		luax_getfunction(L, "graphics", "_shaderCodeToGLSL");
+	
+		// push code strings to the top of the stack so they become function arguments
+		lua_pushvalue(L, 1);
+		lua_pushvalue(L, 2);
+	
+		// call shaderCodeToGLSL, returned values will be at the top of the stack
+		lua_pcall(L, 2, 2, 0);
+	
+		Shader::ShaderSources sources;
+	
+		// vertex shader code
+		if (lua_isstring(L, -2))
+		{
+			std::string vertcode(luaL_checkstring(L, -2));
+			sources[Shader::TYPE_VERTEX] = vertcode;
+		}
+	
+		// pixel shader code
+		if (lua_isstring(L, -1))
+		{
+			std::string fragcode(luaL_checkstring(L, -1));
+			sources[Shader::TYPE_PIXEL] = fragcode;
+		}
+	
+		try
+		{
+			Shader::setDefaultSources(sources);
+		}
+		catch (love::Exception &e)
+		{
+			return luaL_error(L, e.what());
+		}
+	
+		return 0;
+	}
+
 
 	int w_isSupported(lua_State * L)
 	{
@@ -792,8 +959,8 @@ namespace gles2
 					if (!Canvas::isSupported())
 						supported = false;
 					break;
-				case Graphics::SUPPORT_PIXELEFFECT:
-					if (!PixelEffect::isSupported())
+				case Graphics::SUPPORT_SHADER:
+					if (!Shader::isSupported())
 						supported = false;
 					break;
 				case Graphics::SUPPORT_NPOT:
@@ -1206,7 +1373,7 @@ namespace gles2
 		{ "newSpriteBatch", w_newSpriteBatch },
 		{ "newParticleSystem", w_newParticleSystem },
 		{ "newCanvas", w_newCanvas },
-		{ "newPixelEffect", w_newPixelEffect },
+		{ "newShader", w_newShader },
 
 		{ "setColor", w_setColor },
 		{ "getColor", w_getColor },
@@ -1237,8 +1404,11 @@ namespace gles2
 		{ "setCanvas", w_setCanvas },
 		{ "getCanvas", w_getCanvas },
 
-		{ "setPixelEffect", w_setPixelEffect },
-		{ "getPixelEffect", w_getPixelEffect },
+		{ "setShader", w_setShader },
+		{ "getShader", w_getShader },
+		{ "setDefaultShader", w_setDefaultShader },
+		{ "getDefaultShader", w_getDefaultShader },
+		{ "setDefaultShaderSources", w_setDefaultShaderSources },
 
 		{ "isSupported", w_isSupported },
 
@@ -1298,7 +1468,7 @@ namespace gles2
 		luaopen_spritebatch,
 		luaopen_particlesystem,
 		luaopen_canvas,
-		luaopen_pixeleffect,
+		luaopen_shader,
 		0
 	};
 

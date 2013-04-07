@@ -21,6 +21,7 @@
 #include "ParticleSystem.h"
 
 #include <common/math.h>
+#include "Quad.h"
 
 #include <cmath>
 #include <cstdlib>
@@ -48,7 +49,7 @@ namespace gles2
 	}
 
 
-	ParticleSystem::ParticleSystem(Image * sprite, unsigned int buffer) : pStart(0), pLast(0), pEnd(0), active(true), emissionRate(0),
+	ParticleSystem::ParticleSystem(Image * sprite, unsigned int buffer) : pStart(0), pLast(0), pEnd(0), spriteBatch(NULL), sprite(sprite), active(true), emissionRate(0),
 															emitCounter(0), lifetime(-1), life(0), particleLifeMin(0), particleLifeMax(0),
 															direction(0), spread(0), relative(false), speedMin(0), speedMax(0), gravityMin(0),
 															gravityMax(0), radialAccelerationMin(0), radialAccelerationMax(0),
@@ -57,15 +58,17 @@ namespace gles2
 															spinStart(0), spinEnd(0), spinVariation(0), offsetX(sprite->getWidth()*0.5f),
 															offsetY(sprite->getHeight()*0.5f)
 	{
-		this->sprite = sprite;
-		sprite->retain();
 		sizes.push_back(1.0f);
 		colors.push_back( Colorf(1.0f, 1.0f, 1.0f, 1.0f) );
 		setBufferSize(buffer);
+		sprite->retain();
 	}
 
 	ParticleSystem::~ParticleSystem()
 	{
+		for (size_t i = 0; i < quads.size(); i++)
+			quads[i]->release();
+
 		if (this->sprite != 0)
 			this->sprite->release();
 
@@ -144,15 +147,32 @@ namespace gles2
 
 		sprite = image;
 		sprite->retain();
+
+		spriteBatch->setImage(sprite);
 	}
 
 	void ParticleSystem::setBufferSize(unsigned int size)
 	{
-		// delete previous data
-		delete [] pStart;
+		// resize the spritebatch to the new max particle count
+		SpriteBatch *newspritebatch = 0;
+		try
+		{
+			newspritebatch = new SpriteBatch(sprite, size, SpriteBatch::USAGE_STREAM);
+		}
+		catch (love::Exception &)
+		{
+			delete newspritebatch;
+			throw;
+		}
 
-		pLast = pStart = new particle[size];
+		delete spriteBatch;
+		spriteBatch = newspritebatch;
 
+		// delete previous particle data
+		if (pStart != 0)
+			delete [] pStart;
+
+		pLast = pStart = new particle[size]();
 		pEnd = pStart + size;
 	}
 
@@ -304,6 +324,29 @@ namespace gles2
 			colors[i] = colorToFloat( newColors[i] );
 	}
 
+	void ParticleSystem::setQuads(const std::vector<Quad *> &newQuads)
+	{
+		for (size_t i = 0; i < quads.size(); i++)
+			quads[i]->release();
+	
+		quads.resize(newQuads.size());
+	
+		for (size_t i = 0; i < newQuads.size(); i++)
+		{
+			quads[i] = newQuads[i];
+			quads[i]->retain();
+		}
+	}
+	
+	void ParticleSystem::setQuads()
+	{
+		for (size_t i = 0; i < quads.size(); i++)
+			quads[i]->release();
+	
+		quads.resize(0);
+	}
+
+
 	void ParticleSystem::setOffset(float x, float y)
 	{
 		offsetX = x;
@@ -391,32 +434,33 @@ namespace gles2
 
 	void ParticleSystem::draw(float x, float y, float angle, float sx, float sy, float ox, float oy, float kx, float ky) const
 	{
-		// TODO(binji): implement
-#if 0
-		if (sprite == 0) return; // just in case of failure
+		if (sprite == 0 || count() == 0)
+			return; // don't bother if there's nothing to do
 
-		glPushMatrix();
-		glPushAttrib(GL_CURRENT_BIT);
+		size_t numQuads = quads.size();
 
-		Matrix t;
-		t.setTransformation(x, y, angle, sx, sy, ox, oy, kx, ky);
-		glMultMatrixf((const GLfloat*)t.getElements());
+		spriteBatch->clear();
+		spriteBatch->lock();
 
-		particle * p = pStart;
-		while (p != pLast)
+		// add all the particles to the spritebatch
+		for (particle *p = pStart; p != pLast; p++)
 		{
-			glPushMatrix();
+			Color color(p->color.r*255, p->color.g*255, p->color.b*255, p->color.a*255);
+			spriteBatch->setColor(color);
 
-			glColor4f(p->color.r, p->color.g, p->color.b, p->color.a);
-			sprite->draw(p->position[0], p->position[1], p->rotation, p->size, p->size, offsetX, offsetY, 0.0f, 0.0f);
-
-			glPopMatrix();
-			p++;
+			if (numQuads > 0)
+			{
+				// Make sure the quad index is valid
+				size_t quadIndex = (p->quadIndex >= numQuads) ? numQuads - 1 : p->quadIndex;
+				Quad *q = (Quad *) quads[quadIndex];
+				spriteBatch->addq(q, p->position[0], p->position[1], p->rotation, p->size, p->size, offsetX, offsetY, 0.0f, 0.0f);
+			}
+			else
+				spriteBatch->add(p->position[0], p->position[1], p->rotation, p->size, p->size, offsetX, offsetY, 0.0f, 0.0f);
 		}
 
-		glPopAttrib();
-		glPopMatrix();
-#endif
+		spriteBatch->unlock();
+		spriteBatch->draw(x, y, angle, sx, sy, ox, oy, kx, ky);
 	}
 
 	void ParticleSystem::update(float dt)
@@ -508,6 +552,16 @@ namespace gles2
 				k = (i == colors.size() - 1) ? i : i + 1;
 				s -= (float)i;                            // 0 <= s <= 1
 				p->color = colors[i] * (1.0f - s) + colors[k] * s;
+				// Update quad index
+				k = quads.size();
+				if (k > 0)
+				{
+					s = t * (float) k; // [0:numquads-1]
+					i = (s > 0) ? (size_t) s : 0;
+					p->quadIndex = (i < k) ? i : k - 1;
+				}
+				else
+					p->quadIndex = 0;
 
 				// Next particle.
 				p++;

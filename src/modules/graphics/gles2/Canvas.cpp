@@ -19,10 +19,16 @@
 **/
 
 #include "Canvas.h"
+#include "Context.h"
 #include "Graphics.h"
 #include <common/Matrix.h>
 
 #include <cstring> // For memcpy
+
+namespace {
+
+
+}  // namespace
 
 namespace love
 {
@@ -75,71 +81,72 @@ namespace gles2
 
 	void Canvas::startGrab()
 	{
-          // TODO(binji): implement
-#if 0
 		// already grabbing
 		if (current == this)
 			return;
+
+		Context *ctx = getContext();
 
 		// cleanup after previous fbo
 		if (current != NULL)
 			current->stopGrab();
 
+		// Save the previous framebuffer's viewport so we can restore it later
+		savedViewport = ctx->getViewport();
+
 		// bind buffer and clear screen
-		glPushAttrib(GL_VIEWPORT_BIT | GL_TRANSFORM_BIT);
 		bindFBO(fbo);
-		glViewport(0, 0, width, height);
+		ctx->setViewport(0, 0, width, height);
 
-		// Reset the projection matrix
-		glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-		glLoadIdentity();
-
-		// Set up orthographic view (no depth)
-		glOrtho(0.0, width, height, 0.0, -1.0, 1.0);
-
-		// Switch back to modelview matrix
-		glMatrixMode(GL_MODELVIEW);
+		// Set the orthographic projection matrix to this canvas' dimensions
+		Matrix ortho = Matrix::ortho(0.0f, width, height, 0.0f);
+		ctx->projectionStack.push(ortho);
 
 		// indicate we are using this fbo
 		current = this;
-#endif
 	}
 
 	void Canvas::stopGrab()
 	{
-          // TODO(binji): implement
-#if 0
 		// i am not grabbing. leave me alone
 		if (current != this)
 			return;
 
+		Context *ctx = getContext();
+
 		// bind default
-		bindFBO( 0 );
-		glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
-		glPopAttrib();
+		bindFBO(ctx->getDefaultFramebuffer());
+
+		// Restore previous orthographic projection matrix
+		if (ctx->projectionStack.size() > 1)
+			ctx->projectionStack.pop();
+
+		// Restore the previous framebuffer's viewport
+		ctx->setViewport(savedViewport);
+
 		current = NULL;
-#endif
 	}
 
 
 	void Canvas::clear(const Color& c)
 	{
-          // TODO(binji): implement
-#if 0
-		GLuint previous = 0;
+		Context *ctx = getContext();
+
+		GLuint previous = ctx->getDefaultFramebuffer();
 		if (current != NULL)
 			previous = current->fbo;
 
 		bindFBO(fbo);
-		glPushAttrib(GL_COLOR_BUFFER_BIT);
-		glClearColor((float)c.r/255.0f, (float)c.g/255.0f, (float)c.b/255.0f, (float)c.a/255.0f);
+
+		Color defaultcolor = ctx->getClearColor();
+		ctx->setClearColor(c);
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		glPopAttrib();
+
+		// preserve the background color of the default framebuffer
+		ctx->setClearColor(defaultcolor);
 
 		bindFBO(previous);
-#endif
 	}
 
 	void Canvas::draw(float x, float y, float angle, float sx, float sy, float ox, float oy, float kx, float ky) const
@@ -271,28 +278,28 @@ namespace gles2
 
 	void Canvas::drawv(const Matrix & t, const vertex * v) const
 	{
-          // TODO(binji): implement
-#if 0
-		glPushMatrix();
+		Context *ctx = getContext();
 
-		glMultMatrixf((const GLfloat*)t.getElements());
+		ctx->modelViewStack.push(ctx->modelViewStack.top());
+		ctx->modelViewStack.top() *= t;
 
-		bindTexture(img);
+		ctx->bindTexture(img);
 
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)&v[0].x);
-		glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)&v[0].s);
-		glDrawArrays(GL_QUADS, 0, 4);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glDisableClientState(GL_VERTEX_ARRAY);
+		ctx->useVertexAttribArrays(Context::ATTRIB_VERTEX | Context::ATTRIB_TEXCOORD);
 
-		glPopMatrix();
-#endif
+		ctx->vertexAttribPointer(Context::ATTRIB_VERTEX, 2, GL_FLOAT, sizeof(vertex), (GLvoid *)&v[0].x);
+		ctx->vertexAttribPointer(Context::ATTRIB_TEXCOORD, 2, GL_FLOAT, sizeof(vertex), (GLvoid *)&v[0].s);
+
+		ctx->setupRender();
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+		ctx->modelViewStack.pop();
 	}
 
 	GLenum Canvas::createFBO(GLuint& framebuffer, GLuint& depth_stencil,  GLuint& img, int width, int height)
 	{
+		Context *ctx = getContext();
+
 		// get currently bound fbo to reset to it later
 		GLint current_fbo;
 		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &current_fbo);
@@ -301,41 +308,56 @@ namespace gles2
 		glGenFramebuffers(1, &framebuffer);
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
-                        // TODO(binji): implement
-#if 0
 		// create stencil buffer
-		glGenRenderbuffers(1, &depth_stencil);
-		glBindRenderbuffer(GL_RENDERBUFFER, depth_stencil);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_STENCIL, width, height);
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
-				GL_RENDERBUFFER, depth_stencil);
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-				GL_RENDERBUFFER, depth_stencil);
-#endif
+		depth_stencil = createStencil(width, height);
 
 		// generate texture save target
+		GLint internalFormat = GL_RGBA;
+		GLenum type = GL_UNSIGNED_BYTE;
+
 		glGenTextures(1, &img);
-		bindTexture(img);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
-				0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-		bindTexture(0);
+		ctx->bindTexture(img);
+
+		ctx->setTextureFilter(Image::Filter());
+
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height,
+			0, GL_RGBA, type, NULL);
+		ctx->bindTexture(0);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-				GL_TEXTURE_2D, img, 0);
+			GL_TEXTURE_2D, img, 0);
 
 		// check status
 		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
 		// unbind framebuffer
-		glBindRenderbuffer(GL_RENDERBUFFER, 0);
-		glBindFramebuffer(GL_FRAMEBUFFER, (GLuint)current_fbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, (GLuint) current_fbo);
 		return status;
+	}
+
+	GLuint Canvas::createStencil(int width, int height)
+	{
+#if 0
+		GLuint depth_stencil;
+
+		glGenRenderbuffers(1, &depth_stencil);
+		glBindRenderbuffer(GL_RENDERBUFFER, depth_stencil);
+
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
+								  GL_RENDERBUFFER, depth_stencil);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+								  GL_RENDERBUFFER, depth_stencil);
+
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+		return depth_stencil;
+#endif
+                return 0;
 	}
 
 	void Canvas::deleteFBO(GLuint framebuffer, GLuint depth_stencil,  GLuint img)
 	{
-		deleteTexture(img);
+		getContext()->deleteTexture(img);
 		glDeleteRenderbuffers(1, &depth_stencil);
 		glDeleteFramebuffers(1, &framebuffer);
 	}

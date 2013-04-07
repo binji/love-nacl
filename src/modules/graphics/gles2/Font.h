@@ -30,6 +30,7 @@
 #include <common/Object.h>
 #include <font/Rasterizer.h>
 #include <graphics/Image.h>
+#include "VertexBuffer.h"
 
 #include "OpenGL.h"
 
@@ -50,20 +51,47 @@ namespace gles2
 			FONT_UNKNOWN
 		};
 
+		// thin wrapper for an array of 4 vertices
+		struct GlyphQuad
+		{
+			vertex vertices[4];
+		};
+
+
 		struct Glyph
 		{
-			GLuint list;
 			GLuint texture;
 			int spacing;
+			GlyphQuad quad;
+		};
+
+		// used to determine when to change textures in the vertex array generated when printing text
+		struct GlyphArrayDrawInfo
+		{
+			GLuint texture;
+			int startQuad, numQuads;
+	
+			// used when sorting with std::sort
+			// sorts by texture first (binding textures is expensive) and relative position in memory second
+			bool operator < (const GlyphArrayDrawInfo &other) const
+			{
+				if (texture != other.texture)
+					return texture < other.texture;
+				else
+					return startQuad < other.startQuad;
+			};
 		};
 
 		love::font::Rasterizer * rasterizer;
+
+		// Element buffer used to allow glyphs to be drawn with 4 vertices per 2 triangles
+		VertexIndex *elementBuffer;
 
 		int height;
 		float lineHeight;
 		float mSpacing; // modifies the spacing by multiplying it with this value
 		std::vector<GLuint> textures; // vector of packed textures
-		std::map<int, Glyph *> glyphs; // maps glyphs to display lists
+		std::map<unsigned int, Glyph *> glyphs; // maps glyphs to quad information
 		FontType type;
 		Image::Filter filter;
 
@@ -76,6 +104,7 @@ namespace gles2
 
 		void createTexture();
 		Glyph * addGlyph(int glyph);
+		Glyph *findGlyph(unsigned int glyph);
 
 	public:
 
@@ -172,6 +201,11 @@ namespace gles2
 		// Implements Volatile.
 		bool loadVolatile();
 		void unloadVolatile();
+
+		// Extra font metrics
+		int getAscent() const;
+		int getDescent() const;
+		float getBaseline() const;
 
 	}; // Font
 

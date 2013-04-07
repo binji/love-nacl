@@ -28,6 +28,7 @@
 #include <graphics/Drawable.h>
 #include <graphics/Color.h>
 #include "Image.h"
+#include "SpriteBatch.h"
 #include <vector>
 
 namespace love
@@ -36,6 +37,7 @@ namespace graphics
 {
 namespace gles2
 {
+	class Quad;
 
 	// Represents a single particle.
 	struct particle
@@ -63,6 +65,8 @@ namespace gles2
 		float spinEnd;
 
 		Colorf color;
+
+		size_t quadIndex;
 	};
 
 	/**
@@ -84,6 +88,9 @@ namespace gles2
 
 		// Pointer to the end of the memory allocation.
 		particle * pEnd;
+
+		// Spritebatch used when rendering the particles.
+		SpriteBatch *spriteBatch;
 
 		// The sprite to be drawn.
 		Image * sprite;
@@ -150,6 +157,8 @@ namespace gles2
 
 		// Color.
 		std::vector<Colorf> colors;
+
+		std::vector<Quad *> quads;
 
 		void add();
 		void remove(particle * p);
@@ -352,6 +361,17 @@ namespace gles2
 		* @param newColors Array of colors
 		**/
 		void setColor(const std::vector<Color>& newColors);
+
+		/**
+		 * Sets the quads used when drawing the particles.
+		 * @param newQuads Array of quads.
+		 **/
+		void setQuads(const std::vector<Quad *> &newQuads);
+
+		/**
+		 * Removes all quads from the particle system.
+		 **/
+		void setQuads();
 
 		/**
 		* Returns the x-coordinate of the emitter's position.

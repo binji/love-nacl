@@ -20,6 +20,8 @@
 
 #include "Image.h"
 
+#include "Context.h"
+
 // STD
 #include <cstring> // For memcpy
 
@@ -372,24 +374,22 @@ namespace gles2
 
 	void Image::drawv(const Matrix & t, const vertex * v) const
 	{
-		// TODO(binji): implement
-#if 0
 		bind();
-
-		glPushMatrix();
-
-		glMultMatrixf((const GLfloat*)t.getElements());
-
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)&v[0].x);
-		glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)&v[0].s);
-		glDrawArrays(GL_QUADS, 0, 4);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glDisableClientState(GL_VERTEX_ARRAY);
-
-		glPopMatrix();
-#endif
+	
+		Context *ctx = getContext();
+	
+		ctx->modelViewStack.push(ctx->modelViewStack.top());
+		ctx->modelViewStack.top() *= t;
+	
+		ctx->useVertexAttribArrays(Context::ATTRIB_VERTEX | Context::ATTRIB_TEXCOORD);
+	
+		ctx->vertexAttribPointer(Context::ATTRIB_VERTEX, 2, GL_FLOAT, sizeof(vertex), (GLvoid *)&v[0].x);
+		ctx->vertexAttribPointer(Context::ATTRIB_TEXCOORD, 2, GL_FLOAT, sizeof(vertex), (GLvoid *)&v[0].s);
+	
+		ctx->setupRender();
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+	
+		ctx->modelViewStack.pop();
 	}
 
 	bool Image::hasNpot()
