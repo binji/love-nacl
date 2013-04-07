@@ -37,6 +37,18 @@ sources = Build('out/{arch}/{config}/{inf:-ext}.o', 'cc', '{inf}') \
 exe = Build('out/{name}_{arch}_{config}.nexe', 'link').Tag('{name}-exe')
 nmf = Build('out/{name}_{config}.nmf', 'nmf').Tag('{name}-nmf')
 
+LOVE_LUA = [
+  'src/scripts/audio.lua',
+  'src/scripts/boot.lua',
+  'src/scripts/graphics.lua',
+]
+
+Rule('makelua', 'src/scripts/makelua.py $in', 'MAKELUA $out',
+     implicit='src/scripts/makelua.py')
+makelua = Build('{inf}.h', 'makelua', '{inf}').Tag('makelua')
+for b in makelua.ForEach(inf=LOVE_LUA):
+  pass
+
 LOVE_SOURCES = [
   'src/common/b64.cpp',
   'src/common/delay.cpp',
@@ -272,6 +284,7 @@ LOVE_LIBS = [
 for b in sources.ForEach(name='love', inf=LOVE_SOURCES, **arch_config):
   b.Set('ccflags', Prefix('-I', LOVE_INCLUDE_DIRS))
   b.Append('ccflags', Prefix('-D', LOVE_DEFINES))
+  b.Append('order_only', Select('makelua').outputs)
 
 for b in exe.ForEach(name='love', **arch_config):
   b.Set('ldflags', Prefix('-L', LOVE_LIB_DIRS))
