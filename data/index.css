@@ -1,4 +1,12 @@
-embed {
+body {
+  margin: 0;
+}
+#listener {
   height: 100%;
+  position: absolute;
   width: 100%;
+}
+embed {
+  height: 600px;
+  width: 800px;
 }

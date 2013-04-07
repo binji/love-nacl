@@ -7,6 +7,10 @@
 // LOVE
 #include <window/Window.h>
 
+namespace pp {
+class Graphics3D;
+}  // namespace pp
+
 namespace love
 {
 namespace window
@@ -16,7 +20,10 @@ namespace ppapi
 	class Window : public love::window::Window
 	{
 	private:
-                bool created;
+		pp::Graphics3D* graphics_3d;
+		int width;
+		int height;
+		bool created;
 
 	public:
 		Window();
@@ -38,7 +45,6 @@ namespace ppapi
 
 		bool setIcon(love::image::ImageData *imgd);
 
-		// default no-op implementation
 		void swapBuffers();
 
 		bool hasFocus();

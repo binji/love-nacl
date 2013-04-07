@@ -8,14 +8,25 @@
 #include <common/config.h>
 #include "Window.h"
 
+#include <ppapi/cpp/completion_callback.h>
+#include <ppapi/cpp/instance.h>
+#include <ppapi/cpp/graphics_3d.h>
+#include <ppapi/lib/gl/gles2/gl2ext_ppapi.h>
+
 namespace love
 {
 namespace window
 {
 namespace ppapi
 {
+
+extern pp::Instance* g_Instance;
+
 	Window::Window()
-		: created(false)
+		: created(false),
+                  graphics_3d(NULL),
+                  width(0),
+                  height(0)
 	{
 	}
 
@@ -26,14 +37,47 @@ namespace ppapi
 	bool Window::setWindow(int width, int height, bool fullscreen, bool vsync, int fsaa)
 	{
                 // TODO(binji): implement
+		if (!graphics_3d)
+                {
+			int32_t attribs[] = {
+				PP_GRAPHICS3DATTRIB_ALPHA_SIZE, 8,
+				PP_GRAPHICS3DATTRIB_SAMPLES, 0,
+				PP_GRAPHICS3DATTRIB_SAMPLE_BUFFERS, 0,
+				PP_GRAPHICS3DATTRIB_WIDTH, width,
+				PP_GRAPHICS3DATTRIB_HEIGHT, height,
+				PP_GRAPHICS3DATTRIB_NONE
+			};
+
+			graphics_3d = new pp::Graphics3D(g_Instance, attribs);
+                        this->width = width;
+                        this->height = height;
+
+			if (!g_Instance->BindGraphics(*graphics_3d))
+                        {
+				delete graphics_3d;
+				graphics_3d = NULL;
+				return false;
+			}
+		}
+                else
+                {
+			int32_t result = graphics_3d->ResizeBuffers(width, height);
+			if (result != PP_OK)
+                        {
+				delete graphics_3d;
+				graphics_3d = NULL;
+				return false;
+			}
+		}
+		glSetCurrentContextPPAPI(graphics_3d->pp_resource());
 		created = true;
 		return true;
 	}
 
 	void Window::getWindow(int &width, int &height, bool &fullscreen, bool &vsync, int &fsaa)
 	{
-		width = 800;
-		height = 600;
+		width = this->width;
+		height = this->height;
 		fullscreen = false;
 		vsync = true;
 		fsaa = false;
@@ -60,12 +104,12 @@ namespace ppapi
 
 	int Window::getWidth()
 	{
-		return 800;
+		return this->width;
 	}
 
 	int Window::getHeight()
 	{
-		return 600;
+		return this->height;
 	}
 
 	bool Window::isCreated()
@@ -89,6 +133,8 @@ namespace ppapi
 
 	void Window::swapBuffers()
 	{
+		// Blocking.
+		graphics_3d->SwapBuffers(pp::CompletionCallback());
 	}
 
 	bool Window::hasFocus()

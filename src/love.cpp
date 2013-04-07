@@ -286,7 +286,11 @@ _GLIBCXX_END_NAMESPACE
 
 #ifdef LOVE_BUILD_EXE
 
+#ifdef __native_client__
+int love_main(int argc, char ** argv)
+#else
 int main(int argc, char ** argv)
+#endif
 {
 #ifdef LOVE_LEGENDARY_UTF8_ARGV_HACK
 	int hack_argc = 0;
