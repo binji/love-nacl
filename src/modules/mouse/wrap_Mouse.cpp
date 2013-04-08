@@ -20,7 +20,7 @@
 
 #include <common/config.h>
 
-#include "sdl/Mouse.h"
+#include "ppapi/Mouse.h"
 
 #include "wrap_Mouse.h"
 
@@ -124,7 +124,7 @@ namespace mouse
 		{
 			try
 			{
-				instance = new love::mouse::sdl::Mouse();
+				instance = new love::mouse::ppapi::Mouse();
 			}
 			catch (Exception & e)
 			{
