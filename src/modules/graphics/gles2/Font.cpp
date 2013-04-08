@@ -77,39 +77,45 @@ namespace gles2
 	void Font::createTexture()
 	{
 		texture_x = texture_y = rowHeight = TEXTURE_PADDING;
+
 		GLuint t;
 		glGenTextures(1, &t);
 		textures.push_back(t);
-		bindTexture(t);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-						(filter.mag == Image::FILTER_LINEAR) ? GL_LINEAR : GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-						(filter.min == Image::FILTER_LINEAR) ? GL_LINEAR : GL_NEAREST);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		Context *ctx = getContext();
+
+		ctx->bindTexture(t);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
 		GLint format = (type == FONT_TRUETYPE ? GL_LUMINANCE_ALPHA : GL_RGBA);
-		// Initialize the texture
+
 		glTexImage2D(GL_TEXTURE_2D,
 					 0,
-					 GL_RGBA,
+					 format,
 					 (GLsizei)TEXTURE_WIDTH,
 					 (GLsizei)TEXTURE_HEIGHT,
 					 0,
 					 format,
 					 GL_UNSIGNED_BYTE,
 					 NULL);
+
 		// Fill the texture with transparent black
 		std::vector<GLubyte> emptyData(TEXTURE_WIDTH * TEXTURE_HEIGHT * (type == FONT_TRUETYPE ? 2 : 4), 0);
 		glTexSubImage2D(GL_TEXTURE_2D,
 						0,
-						0,
-						0,
+						0, 0,
 						(GLsizei)TEXTURE_WIDTH,
 						(GLsizei)TEXTURE_HEIGHT,
 						format,
 						GL_UNSIGNED_BYTE,
 						&emptyData[0]);
+
+//		setFilter(filter);
 	}
 
 	Font::Glyph * Font::addGlyph(int glyph)

@@ -25,16 +25,15 @@
 #include <iostream>
 #include <cmath>
 
+#include <GLES2/gl2.h>
+
 // LOVE
 #include <graphics/Graphics.h>
 #include <graphics/Color.h>
-
 #include <image/Image.h>
 #include <image/ImageData.h>
-
 #include <window/Window.h>
 
-#include "OpenGL.h"
 #include "Font.h"
 #include "Image.h"
 #include "Quad.h"

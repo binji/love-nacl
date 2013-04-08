@@ -21,6 +21,8 @@
 #ifndef LOVE_GRAPHICS_OPENGL_CANVAS_H
 #define LOVE_GRAPHICS_OPENGL_CANVAS_H
 
+#include "GLES2/gl2.h"
+
 #include <graphics/DrawQable.h>
 #include <graphics/Volatile.h>
 #include <graphics/Image.h>
@@ -30,7 +32,6 @@
 #include <common/math.h>
 #include <common/Matrix.h>
 #include "Context.h"
-#include "OpenGL.h"
 
 namespace love
 {

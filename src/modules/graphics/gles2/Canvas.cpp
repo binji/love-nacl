@@ -198,51 +198,32 @@ namespace gles2
 
 	void Canvas::setFilter(const Image::Filter &f)
 	{
-		GLint gmin = (f.min == Image::FILTER_NEAREST) ? GL_NEAREST : GL_LINEAR;
-		GLint gmag = (f.mag == Image::FILTER_NEAREST) ? GL_NEAREST : GL_LINEAR;
-
-		bindTexture(img);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gmin);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gmag);
+		Context *ctx = getContext();
+		ctx->bindTexture(img);
+                ctx->setTextureFilter(f);
 	}
 
 	Image::Filter Canvas::getFilter() const
 	{
 		GLint gmin, gmag;
 
-		bindTexture(img);
-		glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, &gmin);
-		glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, &gmag);
-
-		Image::Filter f;
-		f.min = (gmin == GL_NEAREST) ? Image::FILTER_NEAREST : Image::FILTER_LINEAR;
-		f.mag = (gmag == GL_NEAREST) ? Image::FILTER_NEAREST : Image::FILTER_LINEAR;
-		return f;
+		Context *ctx = getContext();
+		ctx->bindTexture(img);
+                return ctx->getTextureFilter();
 	}
 
 	void Canvas::setWrap(const Image::Wrap &w)
 	{
-		GLint wrap_s = (w.s == Image::WRAP_CLAMP) ? GL_CLAMP_TO_EDGE : GL_REPEAT;
-		GLint wrap_t = (w.t == Image::WRAP_CLAMP) ? GL_CLAMP_TO_EDGE : GL_REPEAT;
-
-		bindTexture(img);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_s);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_t);
+		Context *ctx = getContext();
+		ctx->bindTexture(img);
+                ctx->setTextureWrap(w);
 	}
 
 	Image::Wrap Canvas::getWrap() const
 	{
-		GLint wrap_s, wrap_t;
-		bindTexture(img);
-		glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, &wrap_s);
-		glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, &wrap_t);
-
-		Image::Wrap w;
-		w.s = (wrap_s == GL_CLAMP_TO_EDGE) ? Image::WRAP_CLAMP : Image::WRAP_REPEAT;
-		w.t = (wrap_t == GL_CLAMP_TO_EDGE) ? Image::WRAP_CLAMP : Image::WRAP_REPEAT;
-
-		return w;
+		Context *ctx = getContext();
+		ctx->bindTexture(img);
+		return ctx->getTextureWrap();
 	}
 
 	bool Canvas::loadVolatile()
@@ -312,16 +293,13 @@ namespace gles2
 		depth_stencil = createStencil(width, height);
 
 		// generate texture save target
-		GLint internalFormat = GL_RGBA;
-		GLenum type = GL_UNSIGNED_BYTE;
-
 		glGenTextures(1, &img);
 		ctx->bindTexture(img);
 
 		ctx->setTextureFilter(Image::Filter());
 
-		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height,
-			0, GL_RGBA, type, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
+			0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 		ctx->bindTexture(0);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
 			GL_TEXTURE_2D, img, 0);

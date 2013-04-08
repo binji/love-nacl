@@ -21,14 +21,14 @@
 #ifndef LOVE_GRAPHICS_OPENGL_IMAGE_H
 #define LOVE_GRAPHICS_OPENGL_IMAGE_H
 
+#include "GLES2/gl2.h"
+
 // LOVE
 #include <common/Matrix.h>
 #include <common/math.h>
 #include <common/config.h>
 #include <image/ImageData.h>
 #include <graphics/Image.h>
-
-#include "OpenGL.h"
 
 namespace love
 {
@@ -58,12 +58,11 @@ namespace gles2
 		// The source vertices of the image.
 		vertex vertices[4];
 
-		// The settings we need to save when reloading.
-		struct
-		{
-			Image::Filter filter;
-			Image::Wrap wrap;
-		} settings;
+		// The image's filter mode
+		Image::Filter filter;
+
+		// The image's wrap mode
+		Image::Wrap wrap;
 
 		bool loadVolatilePOT();
 		bool loadVolatileNPOT();

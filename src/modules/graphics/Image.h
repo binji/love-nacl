@@ -44,7 +44,8 @@ namespace graphics
 
 		enum FilterMode
 		{
-			FILTER_LINEAR = 1,
+			FILTER_NONE,
+			FILTER_LINEAR,
 			FILTER_NEAREST,
 			FILTER_MAX_ENUM
 		};
@@ -54,6 +55,7 @@ namespace graphics
 			Filter();
 			FilterMode min;
 			FilterMode mag;
+                        FilterMode mipmap;
 		};
 
 		struct Wrap

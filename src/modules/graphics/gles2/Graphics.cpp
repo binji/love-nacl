@@ -42,8 +42,6 @@ namespace gles2
 		: currentFont(0), currentImageFilter(), lineStyle(LINE_SMOOTH), lineWidth(1), matrixLimit(0), userMatrices(0)
 	{
 		currentWindow = love::window::ppapi::Window::getSingleton();
-
-		resetBoundTexture();
 	}
 
 	Graphics::~Graphics()

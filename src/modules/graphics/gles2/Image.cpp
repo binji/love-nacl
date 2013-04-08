@@ -51,6 +51,9 @@ namespace gles2
 		vertices[1].s = 0; vertices[1].t = 1;
 		vertices[2].s = 1; vertices[2].t = 1;
 		vertices[3].s = 1; vertices[3].t = 0;
+
+		filter = Image::Filter();
+		filter.mipmap = FILTER_NONE;
 	}
 
 	Image::~Image()
@@ -196,70 +199,15 @@ namespace gles2
 
 	void Image::setWrap(Image::Wrap w)
 	{
-		GLint gs, gt;
-
-		switch(w.s)
-		{
-		case WRAP_CLAMP:
-			gs = GL_CLAMP_TO_EDGE;
-			break;
-		case WRAP_REPEAT:
-		default:
-			gs = GL_REPEAT;
-			break;
-		}
-
-		switch(w.t)
-		{
-		case WRAP_CLAMP:
-			gt = GL_CLAMP_TO_EDGE;
-			break;
-		case WRAP_REPEAT:
-		default:
-			gt = GL_REPEAT;
-			break;
-		}
+		wrap = w;
 
 		bind();
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, gs);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, gt);
+		getContext()->setTextureWrap(w);
 	}
 
 	Image::Wrap Image::getWrap() const
 	{
-		bind();
-
-		GLint gs, gt;
-
-		glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, &gs);
-		glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, &gt);
-
-		Wrap w;
-
-		switch(gs)
-		{
-		case GL_CLAMP_TO_EDGE:
-			w.s = WRAP_CLAMP;
-			break;
-		case GL_REPEAT:
-		default:
-			w.s = WRAP_REPEAT;
-			break;
-		}
-
-		switch(gt)
-		{
-		case GL_CLAMP_TO_EDGE:
-			w.t = WRAP_CLAMP;
-			break;
-		case GL_REPEAT:
-		default:
-			w.t = WRAP_REPEAT;
-			break;
-		}
-
-		return w;
+		return wrap;
 	}
 
 	void Image::bind() const
@@ -267,7 +215,7 @@ namespace gles2
 		if (texture == 0)
 			return;
 
-		bindTexture(texture);
+		getContext()->bindTexture(texture);
 	}
 
 	bool Image::load()
@@ -290,13 +238,12 @@ namespace gles2
 
 	bool Image::loadVolatilePOT()
 	{
-		glGenTextures(1,(GLuint*)&texture);
-		bindTexture(texture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		Context *ctx = getContext();
 
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glGenTextures(1,(GLuint*)&texture);
+		ctx->bindTexture(texture);
+                ctx->setTextureFilter(filter);
+                ctx->setTextureWrap(wrap);
 
 		float p2width = next_p2(width);
 		float p2height = next_p2(height);
@@ -328,21 +275,17 @@ namespace gles2
 			GL_UNSIGNED_BYTE,
 			data->getData());
 
-		setFilter(settings.filter);
-		setWrap(settings.wrap);
-
 		return true;
 	}
 
 	bool Image::loadVolatileNPOT()
 	{
-		glGenTextures(1,(GLuint*)&texture);
-		bindTexture(texture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		Context *ctx = getContext();
 
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glGenTextures(1,(GLuint*)&texture);
+		ctx->bindTexture(texture);
+                ctx->setTextureFilter(filter);
+                ctx->setTextureWrap(wrap);
 
 		glTexImage2D(GL_TEXTURE_2D,
 			0,
@@ -354,20 +297,15 @@ namespace gles2
 			GL_UNSIGNED_BYTE,
 			data->getData());
 
-		setFilter(settings.filter);
-		setWrap(settings.wrap);
-
 		return true;
 	}
 
 	void Image::unloadVolatile()
 	{
-		settings.filter = getFilter();
-		settings.wrap = getWrap();
 		// Delete the hardware texture.
 		if (texture != 0)
 		{
-			deleteTexture(texture);
+			getContext()->deleteTexture(texture);
 			texture = 0;
 		}
 	}

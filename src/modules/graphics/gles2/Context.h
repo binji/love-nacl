@@ -21,10 +21,9 @@
 #ifndef LOVE_GRAPHICS_OPENGL_CONTEXT_H
 #define LOVE_GRAPHICS_OPENGL_CONTEXT_H
 
+#include "GLES2/gl2.h"
+
 #include "common/Matrix.h"
-
-#include "OpenGL.h"
-
 #include "graphics/Color.h"
 #include "graphics/Image.h"
 

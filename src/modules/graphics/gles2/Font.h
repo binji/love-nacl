@@ -26,13 +26,13 @@
 #include <string>
 #include <vector>
 
+#include "GLES2/gl2.h"
+
 // LOVE
 #include <common/Object.h>
 #include <font/Rasterizer.h>
 #include <graphics/Image.h>
 #include "VertexBuffer.h"
-
-#include "OpenGL.h"
 
 namespace love
 {

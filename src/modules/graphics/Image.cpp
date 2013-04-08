@@ -24,7 +24,7 @@ namespace love
 {
 namespace graphics
 {
-	Image::Filter::Filter() : min(FILTER_LINEAR), mag(FILTER_LINEAR)
+	Image::Filter::Filter() : min(FILTER_LINEAR), mag(FILTER_LINEAR), mipmap(FILTER_NONE)
 	{
 	}
 

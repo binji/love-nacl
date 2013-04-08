@@ -531,7 +531,6 @@ void Context::deleteTexture(GLuint texture)
 
 float Context::setTextureFilter(const graphics::Image::Filter &f) const
 {
-#if 0
 	GLint gmin, gmag;
 
 	if (f.mipmap == Image::FILTER_NONE)
@@ -571,20 +570,19 @@ float Context::setTextureFilter(const graphics::Image::Filter &f) const
 
 	float anisotropy = 1.0f;
 
+#if 0
 	if (GLEW_EXT_texture_filter_anisotropic)
 	{
 		anisotropy = std::min(std::max(f.anisotropy, 1.0f), maxAnisotropy);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
 	}
+#endif
 
 	return anisotropy;
-#endif
-        return 1.0f;
 }
 
 graphics::Image::Filter Context::getTextureFilter() const
 {
-#if 0
 	GLint gmin, gmag;
 	glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, &gmin);
 	glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, &gmag);
@@ -629,12 +627,12 @@ graphics::Image::Filter Context::getTextureFilter() const
 		break;
 	}
 
+#if 0
 	if (GLEW_EXT_texture_filter_anisotropic)
 		glGetTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, &f.anisotropy);
+#endif
 
 	return f;
-#endif
-	return graphics::Image::Filter();
 }
 
 void Context::setTextureWrap(const graphics::Image::Wrap &w) const

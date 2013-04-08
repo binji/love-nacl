@@ -141,7 +141,6 @@ LOVE_SOURCES = [
   'src/modules/graphics/gles2/Font.cpp',
   'src/modules/graphics/gles2/Graphics.cpp',
   'src/modules/graphics/gles2/Image.cpp',
-  'src/modules/graphics/gles2/OpenGL.cpp',
   'src/modules/graphics/gles2/ParticleSystem.cpp',
   'src/modules/graphics/gles2/Quad.cpp',
   'src/modules/graphics/gles2/Shader.cpp',
