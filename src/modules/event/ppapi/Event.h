@@ -28,10 +28,6 @@ class Event : public love::event::Event {
   private:
     Message* convert(const love::window::ppapi::InputEvent& event);
 
-    /*
-     static EnumMap<love::keyboard::Keyboard::Key, SDLKey, love::keyboard::Keyboard::KEY_MAX_ENUM>::Entry keyEntries[];
-     static EnumMap<love::keyboard::Keyboard::Key, SDLKey, love::keyboard::Keyboard::KEY_MAX_ENUM> keys;
-       */
     typedef love::mouse::Mouse::Button LoveMouseButton;
     typedef love::window::ppapi::MouseButton PPAPIMouseButton;
     typedef EnumMap<LoveMouseButton, PPAPIMouseButton, love::window::ppapi::MOUSE_BUTTON_MAX> MouseEnumMap;

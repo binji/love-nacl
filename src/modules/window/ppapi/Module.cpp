@@ -69,7 +69,7 @@ bool Instance::HandleInputEvent(const pp::InputEvent& event) {
 }
 
 void* Instance::MainLoop(void* param) {
-  static const char* args[] = { "/", "--game", "/http/passingclouds.love" };
+  static const char* args[] = { "/", "--game", "/http/exo-slime.love" };
   love_main(sizeof(args)/sizeof(args[0]), const_cast<char**>(&args[0]));
 }
 

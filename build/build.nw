@@ -167,7 +167,7 @@ LOVE_SOURCES = [
   'src/modules/joystick/sdl/Joystick.cpp',
   'src/modules/joystick/sdl/wrap_Joystick.cpp',
   'src/modules/keyboard/Keyboard.cpp',
-  'src/modules/keyboard/sdl/Keyboard.cpp',
+  'src/modules/keyboard/ppapi/Keyboard.cpp',
   'src/modules/keyboard/wrap_Keyboard.cpp',
   'src/modules/mouse/Mouse.cpp',
   'src/modules/mouse/ppapi/Mouse.cpp',

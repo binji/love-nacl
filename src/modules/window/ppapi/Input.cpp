@@ -158,6 +158,28 @@ int g_MouseX;
 int g_MouseY;
 bool g_MouseButton[MOUSE_BUTTON_MAX];
 
+int GetMouseX() {
+  return g_MouseX;
+}
+
+int GetMouseY() {
+  return g_MouseY;
+}
+
+bool IsMouseButtonPressed(MouseButton button) {
+  if (button <= MOUSE_NONE || button >= MOUSE_BUTTON_MAX)
+    return false;
+  return g_MouseButton[button];
+}
+
+bool g_Keys[KEY_CODE_MAX];
+
+bool IsKeyPressed(uint32_t code) {
+  if (code >= KEY_CODE_MAX)
+    return false;
+  return g_Keys[code];
+}
+
 void UpdateInputState(const InputEvent& event) {
   switch (event.type) {
     case INPUT_MOUSE:
@@ -173,21 +195,20 @@ void UpdateInputState(const InputEvent& event) {
           break;
       }
       break;
+
+    case INPUT_KEY:
+      switch (event.key.type) {
+        case KEY_DOWN:
+          if (event.key.code < KEY_CODE_MAX)
+            g_Keys[event.key.code] = true;
+          break;
+        case KEY_UP:
+          if (event.key.code < KEY_CODE_MAX)
+            g_Keys[event.key.code] = false;
+          break;
+      }
+      break;
   }
-}
-
-int GetMouseX() {
-  return g_MouseX;
-}
-
-int GetMouseY() {
-  return g_MouseY;
-}
-
-bool IsMouseButtonPressed(MouseButton button) {
-  if (button <= MOUSE_NONE || button >= MOUSE_BUTTON_MAX)
-    return false;
-  return g_MouseButton[button];
 }
 
 }  // ppapi

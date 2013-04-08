@@ -22,7 +22,7 @@
 
 #include "wrap_Keyboard.h"
 
-#include "sdl/Keyboard.h"
+#include "ppapi/Keyboard.h"
 
 namespace love
 {
@@ -85,7 +85,7 @@ namespace keyboard
 		{
 			try
 			{
-				instance = new love::keyboard::sdl::Keyboard();
+				instance = new love::keyboard::ppapi::Keyboard();
 			}
 			catch (Exception & e)
 			{
