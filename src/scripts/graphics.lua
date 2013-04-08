@@ -1486,6 +1486,10 @@ void main() {
 		return shader
 	end
 
+        love.graphics.newPixelEffect = love.graphics.newShader
+        love.graphics.setPixelEffect = love.graphics.setShader
+        love.graphics.getPixelEffect = love.graphics.getShader
+
 	local defaultvertex = [[
 vec4 position(mat4 mvp_matrix, vec4 vertex)
 {
