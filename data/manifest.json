@@ -1,0 +1,24 @@
+{
+  "name": "LOVE player",
+  "version": "1.0.0",
+  "manifest_version": 2,
+  "description": "...",
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+  "permissions": [
+    "<all_urls>",
+    "webRequest",
+    "webRequestBlocking"
+  ],
+  "nacl_modules": [{
+    "path": "love_debug.nmf",
+    "mime_type": "application/x-love-game"
+  }],
+  "web_accessible_resources": [
+    "love_debug.nmf",
+    "love_x86_32_debug.nexe",
+    "love_x86_64_debug.nexe"
+  ]
+}

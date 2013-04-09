@@ -1,3 +1,5 @@
+#include <string>
+#include <vector>
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <nacl_io/nacl_io.h>
@@ -32,6 +34,7 @@ class Instance : public pp::Instance {
   static void* MainLoop(void*);
 
   pthread_t main_loop_thread_;
+  std::string game_;
 };
 
 Instance::Instance(PP_Instance instance)
@@ -54,8 +57,36 @@ bool Instance::Init(uint32_t argc, const char* argn[], const char* argv[]) {
 
   InitializeEventQueue();
 
-  // Mount HTTPFS at /http. All file requests are relative to the .nmf
-  mount("", "/http", "httpfs", 0, "");
+  std::string src;
+  std::string love_src;
+  for (uint32_t i = 0; i < argc; ++i) {
+    if (!strcmp(argn[i], "love_src")) {
+      src = argv[i];
+      printf("Found love_src: %s\n", src.c_str());
+    } else if (!strcmp(argn[i], "src")) {
+      src = argv[i];
+      printf("Found src: %s\n", src.c_str());
+    }
+  }
+
+  if (!love_src.empty())
+    src = love_src;
+
+  std::string base = "/";
+  if (!src.empty()) {
+    size_t last_slash = src.find_last_of('/');
+    if (last_slash != std::string::npos) {
+      base = src.substr(0, last_slash);
+      game_ = "/http/" + src.substr(last_slash + 1);
+    } else {
+      base = "";
+      game_ = "/http/" + src;
+    }
+  }
+
+  printf("Game = %s\n", game_.c_str());
+
+  mount(base.c_str(), "/http", "httpfs", 0, "");
   pthread_create(&main_loop_thread_, NULL, MainLoop, this);
 }
 
@@ -69,8 +100,12 @@ bool Instance::HandleInputEvent(const pp::InputEvent& event) {
 }
 
 void* Instance::MainLoop(void* param) {
-  static const char* args[] = { "/", "--game", "/http/exo-slime.love" };
-  love_main(sizeof(args)/sizeof(args[0]), const_cast<char**>(&args[0]));
+  Instance* instance = static_cast<Instance*>(param);
+  std::vector<const char*> args;
+  args.push_back("/");
+  if (!instance->game_.empty())
+    args.push_back(instance->game_.c_str());
+  love_main(args.size(), const_cast<char**>(args.data()));
 }
 
 
