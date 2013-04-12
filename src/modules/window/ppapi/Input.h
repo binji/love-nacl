@@ -15,6 +15,7 @@ enum InputType {
   INPUT_CHARACTER,
   INPUT_MOUSE,
   INPUT_WHEEL,
+  INPUT_SCREEN_CHANGED,
   INPUT_TYPE_MAX,
 };
 
@@ -232,6 +233,11 @@ struct WheelEvent {
   bool scroll_by_page;
 };
 
+struct ScreenChangedEvent {
+  int width;
+  int height;
+};
+
 struct InputEvent {
   InputType type;
   uint32_t modifiers;
@@ -240,6 +246,7 @@ struct InputEvent {
     CharacterEvent character;
     MouseEvent mouse;
     WheelEvent wheel;
+    ScreenChangedEvent screen_changed;
   };
 };
 
@@ -247,6 +254,7 @@ typedef std::vector<InputEvent> InputEvents;
 
 void InitializeEventQueue();
 void EnqueueEvent(const pp::InputEvent& event);
+void EnqueueEvent(const InputEvent& event);
 bool DequeueEvent(InputEvent* out_event);
 void DequeueAllEvents(InputEvents* out_events);
 void WaitForEvent();

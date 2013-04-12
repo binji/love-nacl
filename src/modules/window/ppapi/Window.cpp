@@ -6,6 +6,7 @@
 
 // LOVE
 #include <common/config.h>
+#include <graphics/gles2/Context.h>
 #include "Window.h"
 
 #include <ppapi/cpp/completion_callback.h>
@@ -36,7 +37,6 @@ extern pp::Instance* g_Instance;
 
 	bool Window::setWindow(int width, int height, bool fullscreen, bool vsync, int fsaa)
 	{
-                // TODO(binji): implement
 		if (!graphics_3d)
                 {
 			int32_t attribs[] = {
@@ -148,6 +148,14 @@ extern pp::Instance* g_Instance;
 	bool Window::getMouseVisible()
 	{
 		return true;
+	}
+
+	void Window::onScreenChanged(int width, int height)
+	{
+		float screen_aspect = width / float(height);
+		float graphics_aspect = this->width / float(this->height);
+		float aspect_scale = graphics_aspect / screen_aspect;
+		love::graphics::gles2::getContext()->setAspectScale(aspect_scale);
 	}
 
 	love::window::Window *Window::getSingleton()

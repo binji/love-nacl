@@ -91,7 +91,12 @@ bool Instance::Init(uint32_t argc, const char* argn[], const char* argv[]) {
 }
 
 void Instance::DidChangeView(const pp::View& view) {
-  // TODO(binji): what to do here?
+  pp::Size size = view.GetRect().size();
+  InputEvent event;
+  event.type = INPUT_SCREEN_CHANGED;
+  event.screen_changed.width = size.width();
+  event.screen_changed.height = size.height();
+  EnqueueEvent(event);
 }
 
 bool Instance::HandleInputEvent(const pp::InputEvent& event) {

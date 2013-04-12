@@ -83,6 +83,7 @@ public:
 	// Transformation matrix stacks used when rendering.
 	std::stack<Matrix> modelViewStack;
 	std::stack<Matrix> projectionStack;
+        Matrix aspectRatioMatrix;
 
 	Context();
 	~Context();
@@ -273,6 +274,8 @@ public:
 	 */
 	graphics::Image::Wrap getTextureWrap() const;
 
+        void setAspectScale(float scale);
+
 private:
 
 	void initCapabilityState();
@@ -308,6 +311,7 @@ private:
 		// The currently active transformation matrices used when rendering.
 		Matrix modelViewMatrix;
 		Matrix projectionMatrix;
+                Matrix aspectRatioMatrix;
 
 		// Map of vertex attributes to internal OpenGL attribute indices.
 		std::map<unsigned int, GLenum> vertexAttribMap;

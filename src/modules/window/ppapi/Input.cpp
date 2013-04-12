@@ -4,6 +4,7 @@
 #include <string.h>
 #include <ppapi/cpp/var.h>
 #include <pthread.h>
+#include "Window.h"
 
 namespace love {
 namespace window {
@@ -107,6 +108,7 @@ pthread_mutex_t g_EventQueueMutex;
 pthread_cond_t g_QueueNonEmpty;
 
 void UpdateInputState(const InputEvent& event);
+void UpdateInputState(const InputEvents& events);
 
 void InitializeEventQueue() {
   pthread_mutex_init(&g_EventQueueMutex, NULL);
@@ -116,11 +118,12 @@ void InitializeEventQueue() {
 void EnqueueEvent(const pp::InputEvent& event) {
   InputEvent converted_event;
   ConvertEvent(event, &converted_event);
+  EnqueueEvent(converted_event);
+}
 
-  UpdateInputState(converted_event);
-
+void EnqueueEvent(const InputEvent& event) {
   pthread_mutex_lock(&g_EventQueueMutex);
-  g_InputEventQueue.push_back(converted_event);
+  g_InputEventQueue.push_back(event);
   pthread_cond_signal(&g_QueueNonEmpty);
   pthread_mutex_unlock(&g_EventQueueMutex);
 }
@@ -134,6 +137,7 @@ bool DequeueEvent(InputEvent* out_event) {
     has_event = true;
   }
   pthread_mutex_unlock(&g_EventQueueMutex);
+  UpdateInputState(*out_event);
   return has_event;
 }
 
@@ -144,6 +148,7 @@ void DequeueAllEvents(InputEvents* out_events) {
             out_events->begin());
   g_InputEventQueue.clear();
   pthread_mutex_unlock(&g_EventQueueMutex);
+  UpdateInputState(*out_events);
 }
 
 void WaitForEvent() {
@@ -180,6 +185,14 @@ bool IsKeyPressed(uint32_t code) {
   return g_Keys[code];
 }
 
+void UpdateInputState(const InputEvents& events) {
+  for (InputEvents::const_iterator iter = events.begin();
+       iter != events.end();
+       ++iter) {
+    UpdateInputState(*iter);
+  }
+}
+
 void UpdateInputState(const InputEvent& event) {
   switch (event.type) {
     case INPUT_MOUSE:
@@ -207,6 +220,12 @@ void UpdateInputState(const InputEvent& event) {
             g_Keys[event.key.code] = false;
           break;
       }
+      break;
+
+    case INPUT_SCREEN_CHANGED:
+      static_cast<Window*>(Window::getSingleton())->onScreenChanged(
+          event.screen_changed.width,
+          event.screen_changed.height);
       break;
   }
 }

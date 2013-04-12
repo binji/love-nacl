@@ -51,6 +51,8 @@ namespace ppapi
 		void setMouseVisible(bool visible);
 		bool getMouseVisible();
 
+                void onScreenChanged(int width, int height);
+
 		static love::window::Window *getSingleton();
 
 		const char *getName() const;

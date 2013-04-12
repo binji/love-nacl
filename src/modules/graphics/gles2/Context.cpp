@@ -226,6 +226,7 @@ void Context::setupRender()
 
 	bool mvmatrixchanged = shaderchanged || modelViewMatrix != state.modelViewMatrix;
 	bool pmatrixchanged = shaderchanged || projectionMatrix != state.projectionMatrix;
+        bool armatrixchanged = shaderchanged || aspectRatioMatrix != state.aspectRatioMatrix;
 
 	if (shader != NULL)
 	{
@@ -251,6 +252,11 @@ void Context::setupRender()
 			shader->sendMatrix("ModelViewProjectionMatrix", 4, mvpMatrix.getElements(), 1);
 		}
 
+		if (armatrixchanged && shader->hasUniform("AspectRatioMatrix"))
+                {
+			shader->sendMatrix("AspectRatioMatrix", 4, aspectRatioMatrix.getElements(), 1);
+                }
+
 		// TODO: normal matrix
 		// "transpose of the inverse of the upper leftmost 3x3 of the Model-View Matrix"
 	}
@@ -260,6 +266,9 @@ void Context::setupRender()
 
 	if (pmatrixchanged)
 		state.projectionMatrix = projectionMatrix;
+
+        if (armatrixchanged)
+		state.aspectRatioMatrix = aspectRatioMatrix;
 
 	state.lastUsedShader = shader;
 }
@@ -697,6 +706,14 @@ graphics::Image::Wrap Context::getTextureWrap() const
 	}
 
 	return w;
+}
+
+void Context::setAspectScale(float scale)
+{
+	if (scale > 1.0)
+		aspectRatioMatrix.setScale(1, 1 / scale);
+	else
+		aspectRatioMatrix.setScale(scale, 1);
 }
 
 } // gles2
