@@ -10,6 +10,23 @@ namespace love {
 namespace window {
 namespace ppapi {
 
+
+int g_MouseX;
+int g_MouseY;
+bool g_MouseButton[MOUSE_BUTTON_MAX];
+bool g_Keys[KEY_CODE_MAX];
+int g_ScreenWidth;
+int g_ScreenHeight;
+
+typedef std::deque<InputEvent> InputEventQueue;
+InputEventQueue g_InputEventQueue;
+pthread_mutex_t g_EventQueueMutex;
+pthread_cond_t g_QueueNonEmpty;
+
+void UpdateInputState(const InputEvent& event);
+void UpdateInputState(const InputEvents& events);
+
+
 void ConvertEvent(const pp::InputEvent& in_event, InputEvent* out_event) {
   InputType type;
   switch (in_event.GetType()) {
@@ -102,13 +119,15 @@ void ConvertEvent(const pp::InputEvent& in_event, InputEvent* out_event) {
   }
 }
 
-typedef std::deque<InputEvent> InputEventQueue;
-InputEventQueue g_InputEventQueue;
-pthread_mutex_t g_EventQueueMutex;
-pthread_cond_t g_QueueNonEmpty;
-
-void UpdateInputState(const InputEvent& event);
-void UpdateInputState(const InputEvents& events);
+void FixEvent(InputEvent* event) {
+  if (event->type == INPUT_MOUSE) {
+    // Scale the x and y coordinates by the aspect scale.
+    int window_x, window_y;
+    static_cast<Window*>(Window::getSingleton())->screenToWindow(
+        event->mouse.x, event->mouse.y,
+        event->mouse.x, event->mouse.y);
+  }
+}
 
 void InitializeEventQueue() {
   pthread_mutex_init(&g_EventQueueMutex, NULL);
@@ -122,8 +141,12 @@ void EnqueueEvent(const pp::InputEvent& event) {
 }
 
 void EnqueueEvent(const InputEvent& event) {
+  InputEvent fixed_event;
+  memcpy(&fixed_event, &event, sizeof(InputEvent));
+  FixEvent(&fixed_event);
+
   pthread_mutex_lock(&g_EventQueueMutex);
-  g_InputEventQueue.push_back(event);
+  g_InputEventQueue.push_back(fixed_event);
   pthread_cond_signal(&g_QueueNonEmpty);
   pthread_mutex_unlock(&g_EventQueueMutex);
 }
@@ -159,10 +182,6 @@ void WaitForEvent() {
   pthread_mutex_unlock(&g_EventQueueMutex);
 }
 
-int g_MouseX;
-int g_MouseY;
-bool g_MouseButton[MOUSE_BUTTON_MAX];
-
 int GetMouseX() {
   return g_MouseX;
 }
@@ -176,8 +195,6 @@ bool IsMouseButtonPressed(MouseButton button) {
     return false;
   return g_MouseButton[button];
 }
-
-bool g_Keys[KEY_CODE_MAX];
 
 bool IsKeyPressed(uint32_t code) {
   if (code >= KEY_CODE_MAX)
@@ -223,6 +240,9 @@ void UpdateInputState(const InputEvent& event) {
       break;
 
     case INPUT_SCREEN_CHANGED:
+      g_ScreenWidth = event.screen_changed.width;
+      g_ScreenHeight = event.screen_changed.height;
+
       static_cast<Window*>(Window::getSingleton())->onScreenChanged(
           event.screen_changed.width,
           event.screen_changed.height);

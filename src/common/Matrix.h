@@ -23,6 +23,7 @@
 
 // LOVE
 #include "math.h"
+#include "Vector.h"
 
 namespace love
 {
@@ -166,6 +167,8 @@ namespace love
 		* @param size The number of vertices.
 		**/
 		void transform(vertex * dst, const vertex * src, int size) const;
+
+		Vector transform(const Vector& src);
 
 		/**
 		 * Creates an orthographic projection Matrix with near and far clipping

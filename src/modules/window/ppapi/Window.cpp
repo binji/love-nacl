@@ -155,7 +155,30 @@ extern pp::Instance* g_Instance;
 		float screen_aspect = width / float(height);
 		float graphics_aspect = this->width / float(this->height);
 		float aspect_scale = graphics_aspect / screen_aspect;
+		float width_scale = this->width / float(width);
+		float height_scale = this->height / float(height);
+
+		screenToWindowMatrix.setIdentity();
+		if (aspect_scale > 1.0f)
+		{
+			float y_offset = 0.5f * (height * (1 / aspect_scale - 1));
+			screenToWindowMatrix.scale(width_scale, height_scale * aspect_scale);
+			screenToWindowMatrix.translate(0, y_offset);
+                }
+		else
+                {
+			float x_offset = 0.5f * (width * (aspect_scale - 1));
+			screenToWindowMatrix.scale(width_scale / aspect_scale, height_scale);
+			screenToWindowMatrix.translate(x_offset, 0);
+		}
 		love::graphics::gles2::getContext()->setAspectScale(aspect_scale);
+	}
+
+	void Window::screenToWindow(int x, int y, int &out_x, int &out_y)
+	{
+		Vector out = screenToWindowMatrix.transform(Vector(x, y));
+		out_x = static_cast<int>(out.x);
+		out_y = static_cast<int>(out.y);
 	}
 
 	love::window::Window *Window::getSingleton()

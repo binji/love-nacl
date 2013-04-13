@@ -24,9 +24,6 @@
 // STD
 #include <cmath>
 
-// LOVE
-#include "Matrix.h"
-
 namespace love
 {
 	/**

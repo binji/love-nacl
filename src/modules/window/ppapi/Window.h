@@ -5,6 +5,7 @@
 #define LOVE_WINDOW_PPAPI_WINDOW_H
 
 // LOVE
+#include <common/Matrix.h>
 #include <window/Window.h>
 
 namespace pp {
@@ -24,6 +25,8 @@ namespace ppapi
 		int width;
 		int height;
 		bool created;
+
+                Matrix screenToWindowMatrix;
 
 	public:
 		Window();
@@ -52,6 +55,8 @@ namespace ppapi
 		bool getMouseVisible();
 
                 void onScreenChanged(int width, int height);
+
+		void screenToWindow(int x, int y, int &out_x, int &out_y);
 
 		static love::window::Window *getSingleton();
 

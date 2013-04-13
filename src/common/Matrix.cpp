@@ -208,6 +208,12 @@ namespace love
 		}
 	}
 
+	Vector Matrix::transform(const Vector& src) {
+		float x = (e[0]*src.x) + (e[4]*src.y) + (0) + (e[12]);
+		float y = (e[1]*src.x) + (e[5]*src.y) + (0) + (e[13]);
+		return Vector(x, y);
+	}
+
 	Matrix Matrix::ortho(float left, float right, float bottom, float top)
 	{
 		Matrix m;
