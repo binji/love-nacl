@@ -297,6 +297,7 @@ for b in nmf.ForEach(name='love', config=CONFIGS):
 
 Build('out/index.html', 'cp', 'data/index.html')
 Build('out/index.css', 'cp', 'data/index.css')
+Build('out/index.js', 'cp', 'data/index.js')
 Build('out/background.js', 'cp', 'data/background.js')
 Build('out/manifest.json', 'cp', 'data/manifest.json')
 

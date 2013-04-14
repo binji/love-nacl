@@ -34,6 +34,9 @@
 #if defined(macintosh)
 #	define LOVE_MACOS 1
 #endif
+#if defined(__native_client__)
+#	define LOVE_NATIVECLIENT 1
+#endif
 
 // Endianness.
 #if defined(__i386__) || defined(__i386)

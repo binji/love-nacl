@@ -286,7 +286,7 @@ _GLIBCXX_END_NAMESPACE
 
 #ifdef LOVE_BUILD_EXE
 
-#ifdef __native_client__
+#ifdef LOVE_NATIVECLIENT
 int love_main(int argc, char ** argv)
 #else
 int main(int argc, char ** argv)

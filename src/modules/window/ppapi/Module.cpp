@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <string>
 #include <vector>
 #include <AL/al.h>
@@ -87,6 +88,10 @@ bool Instance::Init(uint32_t argc, const char* argn[], const char* argv[]) {
   printf("Game = %s\n", game_.c_str());
 
   mount(base.c_str(), "/http", "httpfs", 0, "");
+  mount("", "/persistent", "memfs", 0, "");
+  // TODO(binji): figure out how to make this work...
+//  mount("", "/persistent", "html5fs", 0,
+//        "type=PERSISTENT,expected_size=1048576");
   pthread_create(&main_loop_thread_, NULL, MainLoop, this);
 }
 
@@ -106,6 +111,7 @@ bool Instance::HandleInputEvent(const pp::InputEvent& event) {
 
 void* Instance::MainLoop(void* param) {
   Instance* instance = static_cast<Instance*>(param);
+
   std::vector<const char*> args;
   args.push_back("/");
   if (!instance->game_.empty())

@@ -9,6 +9,7 @@
   },
   "permissions": [
     "<all_urls>",
+    "unlimitedStorage",
     "webRequest",
     "webRequestBlocking"
   ],

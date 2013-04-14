@@ -492,24 +492,38 @@ namespace gles2
 
 	void Graphics::setBlendMode( Graphics::BlendMode mode )
 	{
-//		glAlphaFunc(GL_GEQUAL, 0);
-
-//		if (GLEE_VERSION_1_4 || GLEE_ARB_imaging)
+		Context::BlendState s;
+		s.function = GL_FUNC_ADD;
+	
+		switch (mode)
 		{
-			if (mode == BLEND_SUBTRACTIVE)
-				glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
-			else
-				glBlendEquation(GL_FUNC_ADD);
-		}
+		case BLEND_ALPHA:
+			s.src_rgb = GL_SRC_ALPHA;
+			s.src_a = GL_ONE;
+			s.dst_rgb = s.dst_a = GL_ONE_MINUS_SRC_ALPHA;
+			break;
+		case BLEND_MULTIPLICATIVE:
+			s.src_rgb = s.src_a = GL_DST_COLOR;
+			s.dst_rgb = s.dst_a = GL_ZERO;
+			break;
+		case BLEND_PREMULTIPLIED:
+			s.src_rgb = s.src_a = GL_ONE;
+			s.dst_rgb = s.dst_a = GL_ONE_MINUS_SRC_ALPHA;
+			break;
+		case BLEND_SUBTRACTIVE:
+			s.function = GL_FUNC_REVERSE_SUBTRACT;
+		case BLEND_ADDITIVE:
+			s.src_rgb = s.src_a = GL_SRC_ALPHA;
+			s.dst_rgb = s.dst_a = GL_ONE;
+			break;
+		case BLEND_NONE:
+		default:
+			s.src_rgb = s.src_a = GL_ONE;
+			s.dst_rgb = s.dst_a = GL_ZERO;
+			break;
+	}
 
-		if (mode == BLEND_ALPHA)
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		else if (mode == BLEND_MULTIPLICATIVE)
-			glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
-		else if (mode == BLEND_PREMULTIPLIED)
-			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-		else // mode == BLEND_ADDITIVE || mode == BLEND_SUBTRACTIVE
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	getContext()->setBlendState(s);
 	}
 
 	void Graphics::setColorMode ( Graphics::ColorMode mode )

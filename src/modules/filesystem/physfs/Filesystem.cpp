@@ -249,6 +249,8 @@ namespace physfs
 				appdata = xdgdatahome;
 		}
 		return appdata.c_str();
+#elif defined(LOVE_NATIVECLIENT)
+		return "/persistent";
 #else
 		return getUserDirectory();
 #endif
