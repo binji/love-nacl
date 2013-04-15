@@ -24,6 +24,8 @@ namespace ppapi
 		pp::Graphics3D* graphics_3d;
 		int width;
 		int height;
+                int screenWidth;
+                int screenHeight;
 		bool created;
 
                 Matrix screenToWindowMatrix;

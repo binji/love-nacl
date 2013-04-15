@@ -25,9 +25,11 @@ extern pp::Instance* g_Instance;
 
 	Window::Window()
 		: created(false),
-                  graphics_3d(NULL),
-                  width(0),
-                  height(0)
+		  graphics_3d(NULL),
+		  width(0),
+		  height(0),
+		  screenWidth(0),
+		  screenHeight(0)
 	{
 	}
 
@@ -49,15 +51,13 @@ extern pp::Instance* g_Instance;
 			};
 
 			graphics_3d = new pp::Graphics3D(g_Instance, attribs);
-                        this->width = width;
-                        this->height = height;
-
 			if (!g_Instance->BindGraphics(*graphics_3d))
                         {
 				delete graphics_3d;
 				graphics_3d = NULL;
 				return false;
 			}
+                        printf("New buffer: %dx%d\n", width, height);
 		}
                 else
                 {
@@ -68,9 +68,14 @@ extern pp::Instance* g_Instance;
 				graphics_3d = NULL;
 				return false;
 			}
+                        printf("Resized buffer: %dx%d\n", width, height);
 		}
+		this->width = width;
+		this->height = height;
+
 		glSetCurrentContextPPAPI(graphics_3d->pp_resource());
 		created = true;
+                onScreenChanged(screenWidth, screenHeight);
 		return true;
 	}
 
@@ -150,24 +155,33 @@ extern pp::Instance* g_Instance;
 		return true;
 	}
 
-	void Window::onScreenChanged(int width, int height)
+	void Window::onScreenChanged(int w, int h)
 	{
-		float screen_aspect = width / float(height);
-		float graphics_aspect = this->width / float(this->height);
+		screenWidth = w;
+		screenHeight = h;
+
+		float screen_aspect = screenWidth / float(screenHeight);
+		float graphics_aspect = width / float(height);
 		float aspect_scale = graphics_aspect / screen_aspect;
-		float width_scale = this->width / float(width);
-		float height_scale = this->height / float(height);
+		float width_scale = width / float(screenWidth);
+		float height_scale = height / float(screenHeight);
+
+		printf("screen: %d x %d\n", screenWidth, screenHeight);
+		printf("graphics: %d x %d\n", width, height);
+		printf("scale: %g x %g\n", width_scale, height_scale);
 
 		screenToWindowMatrix.setIdentity();
 		if (aspect_scale > 1.0f)
 		{
-			float y_offset = 0.5f * (height * (1 / aspect_scale - 1));
+			float y_offset = 0.5f * (screenHeight * (1 / aspect_scale - 1));
+			printf("y_offset %g\n", y_offset);
 			screenToWindowMatrix.scale(width_scale, height_scale * aspect_scale);
 			screenToWindowMatrix.translate(0, y_offset);
                 }
 		else
                 {
-			float x_offset = 0.5f * (width * (aspect_scale - 1));
+			float x_offset = 0.5f * (screenWidth * (aspect_scale - 1));
+			printf("x_offset %g\n", x_offset);
 			screenToWindowMatrix.scale(width_scale / aspect_scale, height_scale);
 			screenToWindowMatrix.translate(x_offset, 0);
 		}
