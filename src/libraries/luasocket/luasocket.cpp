@@ -35,6 +35,14 @@ extern "C" {
 	lua_setfield(L, -2, name); \
 	lua_pop(L, 2);	
 
+int luaopen_socket_core(lua_State *L) {
+  return 1;
+}
+
+int luaopen_mime_core(lua_State *L) {
+  return 1;
+}
+
 namespace love
 {
 namespace luasocket

@@ -40,7 +40,7 @@
 #include <SDL.h>
 
 // Libraries.
-//#include "libraries/luasocket/luasocket.h"
+#include "libraries/luasocket/luasocket.h"
 
 // Scripts
 #include "scripts/boot.lua.h"

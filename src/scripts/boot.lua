@@ -792,6 +792,19 @@ function love.releaseerrhand(msg)
 	end
 end
 
+-- TODO(binji): this is a pretty crappy hack.
+if not socket then socket = {} end
+if not socket.http then socket.http = {} end
+
+function socket.http.request(url)
+-- TODO(binji): use URLLoader?
+	return '', 404
+end
+
+package.preload['socket'] = function(modname) return socket end
+package.preload['socket.http'] = function(modname) return socket.http end
+
+
 
 -----------------------------------------------------------
 -- The root of all calls.
