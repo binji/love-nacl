@@ -1341,6 +1341,13 @@ void main() {
 		return code
 	end
 
+        local function fixShader(code)
+          code = code:gsub("extern%s+(%w+)%s+(%w+)%s+=%s+(.-);", "const %1 %2 = %3;")
+          code = code:gsub("gl_TexCoord%[0%]", "VaryingTexCoord")
+          code = code:gsub("gl_TexCoord", "VaryingTexCoord")
+          return code
+        end
+
 	local function createVertexCode(vertexcode)
 		local vertexcodes = {
 			GLSLES_VERSION,
@@ -1353,7 +1360,8 @@ void main() {
 			vertexcode,
 			GLSLES_MAIN_VERTEX,
 		}
-		return table_concat(vertexcodes, "\n")
+		code = table_concat(vertexcodes, "\n")
+                return fixShader(code)
 	end
 
 	local function createPixelCode(pixelcode)
@@ -1368,7 +1376,8 @@ void main() {
 			pixelcode,
 			GLSL_MAIN_PIXEL,
 		}
-		return table_concat(pixelcodes, "\n")
+		code = table_concat(pixelcodes, "\n")
+                return fixShader(code)
 	end
 
 	function love.graphics._shaderCodeToGLSL(vertexcode, pixelcode)
