@@ -334,7 +334,7 @@ namespace gles2
 	{
                 // TODO(binji): gles2 supports NPOT, but it is limited:
                 // http://www.khronos.org/webgl/wiki/WebGL_and_OpenGL_Differences 
-                return true;
+                return false;
 //		return GLEE_ARB_texture_non_power_of_two != 0;
 	}
 
