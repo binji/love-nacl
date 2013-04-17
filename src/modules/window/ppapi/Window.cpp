@@ -163,29 +163,42 @@ extern pp::Instance* g_Instance;
 		float screen_aspect = screenWidth / float(screenHeight);
 		float graphics_aspect = width / float(height);
 		float aspect_scale = graphics_aspect / screen_aspect;
+
+		float screen_x_offset = 0;
+		float screen_y_offset = 0;
+		float graphics_x_offset = 0;
+		float graphics_y_offset = 0;
+		float scaled_width = width;
+		float scaled_height = height;
 		float width_scale = width / float(screenWidth);
 		float height_scale = height / float(screenHeight);
-
-		printf("screen: %d x %d\n", screenWidth, screenHeight);
-		printf("graphics: %d x %d\n", width, height);
-		printf("scale: %g x %g\n", width_scale, height_scale);
 
 		screenToWindowMatrix.setIdentity();
 		if (aspect_scale > 1.0f)
 		{
-			float y_offset = 0.5f * (screenHeight * (1 / aspect_scale - 1));
-			printf("y_offset %g\n", y_offset);
-			screenToWindowMatrix.scale(width_scale, height_scale * aspect_scale);
-			screenToWindowMatrix.translate(0, y_offset);
+			screen_y_offset = 0.5f * (screenHeight * (1 / aspect_scale - 1));
+                        scaled_height = height / aspect_scale;
+                        height_scale *= aspect_scale;
+			graphics_y_offset = 0.5f * (height - scaled_height);
                 }
 		else
                 {
-			float x_offset = 0.5f * (screenWidth * (aspect_scale - 1));
-			printf("x_offset %g\n", x_offset);
-			screenToWindowMatrix.scale(width_scale / aspect_scale, height_scale);
-			screenToWindowMatrix.translate(x_offset, 0);
+			screen_x_offset = 0.5f * (screenWidth * (aspect_scale - 1));
+                        scaled_width = width * aspect_scale;
+                        width_scale /= aspect_scale;
+			graphics_x_offset = 0.5f * (width - scaled_width);
 		}
-		love::graphics::gles2::getContext()->setAspectScale(aspect_scale);
+
+		printf("screen: %d x %d\n", screenWidth, screenHeight);
+		printf("graphics: %d x %d\n", width, height);
+		printf("scale: %g x %g\n", width_scale, height_scale);
+		printf("screen_offset %g x %g\n", screen_x_offset, screen_y_offset);
+                printf("viewport: <%g, %g, %g, %g>\n", graphics_x_offset, graphics_y_offset, scaled_width, scaled_height);
+
+		screenToWindowMatrix.scale(width_scale, height_scale);
+		screenToWindowMatrix.translate(screen_x_offset, screen_y_offset);
+                love::graphics::gles2::getContext()->setMainViewport(
+                    graphics_x_offset, graphics_y_offset, scaled_width, scaled_height);
 	}
 
 	void Window::screenToWindow(int x, int y, int &out_x, int &out_y)

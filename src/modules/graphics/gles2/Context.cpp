@@ -226,7 +226,6 @@ void Context::setupRender()
 
 	bool mvmatrixchanged = shaderchanged || modelViewMatrix != state.modelViewMatrix;
 	bool pmatrixchanged = shaderchanged || projectionMatrix != state.projectionMatrix;
-        bool armatrixchanged = shaderchanged || aspectRatioMatrix != state.aspectRatioMatrix;
 
 	if (shader != NULL)
 	{
@@ -252,11 +251,6 @@ void Context::setupRender()
 			shader->sendMatrix("ModelViewProjectionMatrix", 4, mvpMatrix.getElements(), 1);
 		}
 
-		if (armatrixchanged && shader->hasUniform("AspectRatioMatrix"))
-                {
-			shader->sendMatrix("AspectRatioMatrix", 4, aspectRatioMatrix.getElements(), 1);
-                }
-
 		// TODO: normal matrix
 		// "transpose of the inverse of the upper leftmost 3x3 of the Model-View Matrix"
 	}
@@ -266,9 +260,6 @@ void Context::setupRender()
 
 	if (pmatrixchanged)
 		state.projectionMatrix = projectionMatrix;
-
-        if (armatrixchanged)
-		state.aspectRatioMatrix = aspectRatioMatrix;
 
 	state.lastUsedShader = shader;
 }
@@ -369,21 +360,37 @@ float Context::getMaxPointSize() const
 	return state.maxPointSize;
 }
 
+void Context::setMainViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
+	Viewport v(x, y, width, height);
+	if (viewportStack.empty())
+		viewportStack.push_back(v);
+	else
+		viewportStack[0] = v;
 
-void Context::setViewport(const Context::Viewport &v)
-{
-	glViewport(v.x, v.y, v.width, v.height);
-	state.viewport = v;
+	if (viewportStack.size() == 1)
+		glViewport(v.x, v.y, v.width, v.height);
 }
 
-void Context::setViewport(GLint x, GLint y, GLsizei width, GLsizei height)
+void Context::pushViewport(const Context::Viewport &v)
 {
-	setViewport(Viewport(x, y, width, height));
+	glViewport(v.x, v.y, v.width, v.height);
+	viewportStack.push_back(v);
+}
+
+void Context::pushViewport(GLint x, GLint y, GLsizei width, GLsizei height)
+{
+	pushViewport(Viewport(x, y, width, height));
+}
+
+void Context::popViewport() {
+	viewportStack.pop_back();
+	const Viewport& v = getViewport();
+	glViewport(v.x, v.y, v.width, v.height);
 }
 
 const Context::Viewport &Context::getViewport() const
 {
-	return state.viewport;
+	return viewportStack.back();
 }
 
 void Context::setBlendState(const Context::BlendState &s)
@@ -706,14 +713,6 @@ graphics::Image::Wrap Context::getTextureWrap() const
 	}
 
 	return w;
-}
-
-void Context::setAspectScale(float scale)
-{
-	if (scale > 1.0)
-		aspectRatioMatrix.setScale(1, 1 / scale);
-	else
-		aspectRatioMatrix.setScale(scale, 1);
 }
 
 } // gles2

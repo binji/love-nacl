@@ -1291,7 +1291,6 @@ do
 uniform mat4 ModelViewMatrix;
 uniform mat4 ProjectionMatrix;
 uniform mat4 ModelViewProjectionMatrix;
-uniform mat4 AspectRatioMatrix;
 uniform mat3 NormalMatrix;
 //uniform float PointSize = 1.0;
 uniform float PointSize;
@@ -1318,7 +1317,7 @@ void main() {
 	VaryingColor = VertexColor;
 	VaryingTexCoord = VertexTexCoord.st;
 	gl_PointSize = PointSize;
-	gl_Position = AspectRatioMatrix * position(ModelViewProjectionMatrix, VertexPosition);
+	gl_Position = position(ModelViewProjectionMatrix, VertexPosition);
 }]]
 
 	local GLSL_MAIN_PIXEL = [[

@@ -83,7 +83,7 @@ public:
 	// Transformation matrix stacks used when rendering.
 	std::stack<Matrix> modelViewStack;
 	std::stack<Matrix> projectionStack;
-        Matrix aspectRatioMatrix;
+	std::vector<Viewport> viewportStack;
 
 	Context();
 	~Context();
@@ -156,11 +156,11 @@ public:
 	 **/
 	const BlendState &getBlendState() const;
 
-	/**
-	 * Sets the window viewport for the currently bound framebuffer.
-	 **/
-	void setViewport(const Viewport &v);
-	void setViewport(GLint x, GLint y, GLsizei width, GLsizei height);
+
+	void setMainViewport(GLint x, GLint y, GLsizei width, GLsizei height);
+	void pushViewport(const Viewport &v);
+	void pushViewport(GLint x, GLint y, GLsizei width, GLsizei height);
+	void popViewport();
 
 	/**
 	 * Gets the last window viewport set with setViewport.
@@ -274,8 +274,6 @@ public:
 	 */
 	graphics::Image::Wrap getTextureWrap() const;
 
-        void setAspectScale(float scale);
-
 private:
 
 	void initCapabilityState();
@@ -302,16 +300,12 @@ private:
 		float maxPointSize;
 		float lastShaderPointSize;
 
-		// The last viewport set with setViewport.
-		Viewport viewport;
-
 		// The current blending state.
 		BlendState blend;
 
 		// The currently active transformation matrices used when rendering.
 		Matrix modelViewMatrix;
 		Matrix projectionMatrix;
-                Matrix aspectRatioMatrix;
 
 		// Map of vertex attributes to internal OpenGL attribute indices.
 		std::map<unsigned int, GLenum> vertexAttribMap;

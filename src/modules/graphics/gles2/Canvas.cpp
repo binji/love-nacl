@@ -91,12 +91,9 @@ namespace gles2
 		if (current != NULL)
 			current->stopGrab();
 
-		// Save the previous framebuffer's viewport so we can restore it later
-		savedViewport = ctx->getViewport();
-
 		// bind buffer and clear screen
 		bindFBO(fbo);
-		ctx->setViewport(0, 0, width, height);
+		ctx->pushViewport(0, 0, width, height);
 
 		// Set the orthographic projection matrix to this canvas' dimensions
 		Matrix ortho = Matrix::ortho(0.0f, width, height, 0.0f);
@@ -122,7 +119,7 @@ namespace gles2
 			ctx->projectionStack.pop();
 
 		// Restore the previous framebuffer's viewport
-		ctx->setViewport(savedViewport);
+		ctx->popViewport();
 
 		current = NULL;
 	}

@@ -93,10 +93,6 @@ namespace gles2
 
 		GLenum status;
 
-		// Viewport used by the previously bound canvas.
-		Context::Viewport savedViewport;
-
-
 		struct {
 			Image::Filter filter;
 			Image::Wrap wrap;

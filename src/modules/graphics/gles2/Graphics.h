@@ -110,6 +110,7 @@ namespace gles2
 		GLint matrixLimit;
 		GLint userMatrices;
 
+		int getRenderWidth();
 		int getRenderHeight();
 
 	public:

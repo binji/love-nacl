@@ -143,7 +143,7 @@ namespace gles2
 		ctx->setActiveTextureUnit(0);
 
 		// Set the viewport to top-left corner
-		ctx->setViewport(0, 0, width, height);
+		ctx->setMainViewport(0, 0, width, height);
 
 		// Set the projection matrix to an orthographic view with no depth
 		ctx->projectionStack.push(Matrix());
@@ -230,6 +230,12 @@ namespace gles2
 		return currentWindow->getHeight();
 	}
 
+	int Graphics::getRenderWidth() {
+		if (Canvas::current)
+			return Canvas::current->getWidth();
+		return getWidth();
+	}
+
 	int Graphics::getRenderHeight()
 	{
 		if (Canvas::current)
@@ -280,27 +286,82 @@ namespace gles2
 
 	void Graphics::setScissor(int x, int y, int width, int height)
 	{
-		glEnable(GL_SCISSOR_TEST);
-		glScissor(x, getRenderHeight() - (y + height), width, height); // Compensates for the fact that our y-coordinate is reverse of OpenGLs.
+		int newX = x;
+		int newY = y;
+		int newWidth = width;
+		int newHeight = height;
+		if (Canvas::current)
+		{
+			// We don't need to scale canvas scissors, just flip Y.
+			newY = getRenderHeight() - (y + height);
+		}
+		else
+		{
+			const Context::Viewport& v = getContext()->getViewport();
+			int renderWidth = getRenderWidth();
+			int renderHeight = getRenderHeight();
+			int scaledWidth = v.width;
+			int scaledHeight = v.height;
+			int xOffset = (renderWidth - scaledWidth) / 2;
+			int yOffset = (renderHeight - scaledHeight) / 2;
+			float widthScale = scaledWidth / float(renderWidth);
+			float heightScale = scaledHeight / float(renderHeight);
+
+			newX = widthScale * x + xOffset;
+			newY = scaledHeight - heightScale * (y + height) + yOffset;
+			newWidth = widthScale * width;
+			newHeight = heightScale * height;
+		}
+
+		getContext()->setCapability(GL_SCISSOR_TEST, true);
+		glScissor(newX, newY, newWidth, newHeight);
 	}
 
 	void Graphics::setScissor()
 	{
-		glDisable(GL_SCISSOR_TEST);
+		getContext()->setCapability(GL_SCISSOR_TEST, false);
 	}
 
 	int Graphics::getScissor(lua_State * L)
 	{
-		if (glIsEnabled(GL_SCISSOR_TEST) == GL_FALSE)
+		if (!getContext()->getCapability(GL_SCISSOR_TEST))
 			return 0;
 
 		GLint scissor[4];
 		glGetIntegerv(GL_SCISSOR_BOX, scissor);
 
-		lua_pushnumber(L, scissor[0]);
-		lua_pushnumber(L, getRenderHeight() - (scissor[1] + scissor[3])); // Compensates for the fact that our y-coordinate is reverse of OpenGLs.
-		lua_pushnumber(L, scissor[2]);
-		lua_pushnumber(L, scissor[3]);
+		int x = scissor[0];
+		int y = scissor[1];
+		int width = scissor[2];
+		int height = scissor[3];
+		if (Canvas::current)
+		{
+			// We don't need to scale canvas scissors, just flip Y.
+			y = getRenderHeight() - (y + height);
+		}
+		else
+		{
+			const Context::Viewport& v = getContext()->getViewport();
+			int renderWidth = getRenderWidth();
+			int renderHeight = getRenderHeight();
+			int scaledWidth = v.width;
+			int scaledHeight = v.height;
+			int xOffset = (renderWidth - scaledWidth) / 2;
+			int yOffset = (renderHeight - scaledHeight) / 2;
+			float widthScale = scaledWidth / float(renderWidth);
+			float heightScale = scaledHeight / float(renderHeight);
+
+			// Invert equations above in setScissor
+			x = (x - xOffset) / widthScale;
+			y = (scaledHeight - (y - yOffset)) / heightScale - height;
+			width = width / widthScale;
+			height = height / heightScale;
+		}
+
+		lua_pushnumber(L, x);
+		lua_pushnumber(L, y);
+		lua_pushnumber(L, width);
+		lua_pushnumber(L, height);
 
 		return 4;
 	}
@@ -308,7 +369,7 @@ namespace gles2
 	void Graphics::defineStencil()
 	{
 		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-		glEnable(GL_STENCIL_TEST);
+		getContext()->setCapability(GL_STENCIL_TEST, true);
 		glClear(GL_STENCIL_BUFFER_BIT);
 		glStencilFunc(GL_ALWAYS, 1, 1);
 		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -324,7 +385,7 @@ namespace gles2
 	void Graphics::discardStencil()
 	{
 		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-		glDisable(GL_STENCIL_TEST);
+		getContext()->setCapability(GL_STENCIL_TEST, false);
 	}
 
 	Image * Graphics::newImage(love::image::ImageData * data)
@@ -494,7 +555,7 @@ namespace gles2
 	{
 		Context::BlendState s;
 		s.function = GL_FUNC_ADD;
-	
+
 		switch (mode)
 		{
 		case BLEND_ALPHA:
@@ -571,7 +632,7 @@ namespace gles2
 			return BLEND_ALPHA;
 		else
 			throw love::Exception("Unknown blend mode.");
-	
+
 		return BLEND_MAX_ENUM; // Should never be reached.
 	}
 
