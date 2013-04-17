@@ -17,6 +17,7 @@ bool g_MouseButton[MOUSE_BUTTON_MAX];
 bool g_Keys[KEY_CODE_MAX];
 int g_ScreenWidth;
 int g_ScreenHeight;
+bool g_KeyRepeat = false;
 
 typedef std::deque<InputEvent> InputEventQueue;
 InputEventQueue g_InputEventQueue;
@@ -27,7 +28,7 @@ void UpdateInputState(const InputEvent& event);
 void UpdateInputState(const InputEvents& events);
 
 
-void ConvertEvent(const pp::InputEvent& in_event, InputEvent* out_event) {
+bool ConvertEvent(const pp::InputEvent& in_event, InputEvent* out_event) {
   InputType type;
   switch (in_event.GetType()) {
     case PP_INPUTEVENT_TYPE_MOUSEDOWN:
@@ -107,6 +108,11 @@ void ConvertEvent(const pp::InputEvent& in_event, InputEvent* out_event) {
     case INPUT_KEY: {
       pp::KeyboardInputEvent key_event(in_event);
       out_event->key.code = key_event.GetKeyCode();
+      // Kill repeated keys if it is turned off.
+      if (!g_KeyRepeat) {
+        if (out_event->key.type == KEY_DOWN && IsKeyPressed(out_event->key.code))
+            return false;
+      }
       break;
     }
     case INPUT_CHARACTER: {
@@ -117,6 +123,8 @@ void ConvertEvent(const pp::InputEvent& in_event, InputEvent* out_event) {
       break;
     }
   }
+
+  return true;
 }
 
 void FixEvent(InputEvent* event) {
@@ -136,8 +144,8 @@ void InitializeEventQueue() {
 
 void EnqueueEvent(const pp::InputEvent& event) {
   InputEvent converted_event;
-  ConvertEvent(event, &converted_event);
-  EnqueueEvent(converted_event);
+  if (ConvertEvent(event, &converted_event))
+    EnqueueEvent(converted_event);
 }
 
 void EnqueueEvent(const InputEvent& event) {
@@ -200,6 +208,10 @@ bool IsKeyPressed(uint32_t code) {
   if (code >= KEY_CODE_MAX)
     return false;
   return g_Keys[code];
+}
+
+void SetKeyRepeat(bool repeat) {
+  g_KeyRepeat = repeat;
 }
 
 void UpdateInputState(const InputEvents& events) {

@@ -265,6 +265,7 @@ int GetMouseY();
 bool IsMouseButtonPressed(MouseButton);
 
 // Keyboard state
+void SetKeyRepeat(bool repeat);
 bool IsKeyPressed(uint32_t code);
 
 }  // ppapi

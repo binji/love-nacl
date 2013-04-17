@@ -2,6 +2,7 @@
  **/
 
 #include <common/config.h>
+#include <window/ppapi/Input.h>
 
 #include "Keyboard.h"
 
@@ -25,6 +26,7 @@ bool Keyboard::isDown(Key * keylist) const {
 }
 
 void Keyboard::setKeyRepeat(int delay, int interval) const {
+  love::window::ppapi::SetKeyRepeat(delay != 0);
 }
 
 int Keyboard::getKeyRepeatDelay() const {
