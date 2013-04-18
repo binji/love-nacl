@@ -24,14 +24,18 @@ namespace ppapi
 		pp::Graphics3D* graphics_3d;
 		int width;
 		int height;
-                int screenWidth;
-                int screenHeight;
+		int contextWidth;
+		int contextHeight;
+		int screenWidth;
+		int screenHeight;
 		bool created;
 
-                Matrix screenToWindowMatrix;
+		Matrix screenToWindowMatrix;
+
+		bool createContext(int width, int height);
 
 	public:
-		Window();
+		Window(int screenWidth, int screenHeight);
 		~Window();
 
 		bool setWindow(int width = 800, int height = 600, bool fullscreen = false, bool vsync = true, int fsaa = 0);
@@ -42,6 +46,9 @@ namespace ppapi
 
 		int getWidth();
 		int getHeight();
+
+		int getScreenWidth();
+		int getScreenHeight();
 
 		bool isCreated();
 

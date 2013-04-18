@@ -11,6 +11,7 @@
 #include <ppapi/lib/gl/gles2/gl2ext_ppapi.h>
 
 #include <window/Window.h>
+#include <window/ppapi/Window.h>
 #include "Input.h"
 
 
@@ -92,11 +93,16 @@ bool Instance::Init(uint32_t argc, const char* argn[], const char* argv[]) {
   // TODO(binji): figure out how to make this work...
 //  mount("", "/persistent", "html5fs", 0,
 //        "type=PERSISTENT,expected_size=1048576");
-  pthread_create(&main_loop_thread_, NULL, MainLoop, this);
 }
 
 void Instance::DidChangeView(const pp::View& view) {
   pp::Size size = view.GetRect().size();
+
+  if (!Window::getSingleton()) {
+    new Window(size.width(), size.height());
+    pthread_create(&main_loop_thread_, NULL, MainLoop, this);
+  }
+
   InputEvent event;
   event.type = INPUT_SCREEN_CHANGED;
   event.screen_changed.width = size.width();

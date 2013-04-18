@@ -41,7 +41,7 @@ namespace gles2
 	Graphics::Graphics()
 		: currentFont(0), currentImageFilter(), lineStyle(LINE_SMOOTH), lineWidth(1), matrixLimit(0), userMatrices(0)
 	{
-		currentWindow = love::window::ppapi::Window::getSingleton();
+		currentWindow = (love::window::ppapi::Window*)love::window::ppapi::Window::getSingleton();
 	}
 
 	Graphics::~Graphics()
@@ -233,14 +233,14 @@ namespace gles2
 	int Graphics::getRenderWidth() {
 		if (Canvas::current)
 			return Canvas::current->getWidth();
-		return getWidth();
+		return currentWindow->getScreenWidth();
 	}
 
 	int Graphics::getRenderHeight()
 	{
 		if (Canvas::current)
 			return Canvas::current->getHeight();
-		return getHeight();
+		return currentWindow->getScreenHeight();
 	}
 
 	bool Graphics::isCreated()
@@ -286,33 +286,11 @@ namespace gles2
 
 	void Graphics::setScissor(int x, int y, int width, int height)
 	{
-		int newX = x;
-		int newY = y;
+		const Context::Viewport& v = getContext()->getViewport();
+		int newX = x + v.x;
+		int newY = getRenderHeight() - (y + v.y + height);
 		int newWidth = width;
 		int newHeight = height;
-		if (Canvas::current)
-		{
-			// We don't need to scale canvas scissors, just flip Y.
-			newY = getRenderHeight() - (y + height);
-		}
-		else
-		{
-			const Context::Viewport& v = getContext()->getViewport();
-			int renderWidth = getRenderWidth();
-			int renderHeight = getRenderHeight();
-			int scaledWidth = v.width;
-			int scaledHeight = v.height;
-			int xOffset = (renderWidth - scaledWidth) / 2;
-			int yOffset = (renderHeight - scaledHeight) / 2;
-			float widthScale = scaledWidth / float(renderWidth);
-			float heightScale = scaledHeight / float(renderHeight);
-
-			newX = widthScale * x + xOffset;
-			newY = scaledHeight - heightScale * (y + height) + yOffset;
-			newWidth = widthScale * width;
-			newHeight = heightScale * height;
-		}
-
 		getContext()->setCapability(GL_SCISSOR_TEST, true);
 		glScissor(newX, newY, newWidth, newHeight);
 	}
@@ -330,36 +308,13 @@ namespace gles2
 		GLint scissor[4];
 		glGetIntegerv(GL_SCISSOR_BOX, scissor);
 
+                const Context::Viewport& v = getContext()->getViewport();
 		int x = scissor[0];
 		int y = scissor[1];
 		int width = scissor[2];
 		int height = scissor[3];
-		if (Canvas::current)
-		{
-			// We don't need to scale canvas scissors, just flip Y.
-			y = getRenderHeight() - (y + height);
-		}
-		else
-		{
-			const Context::Viewport& v = getContext()->getViewport();
-			int renderWidth = getRenderWidth();
-			int renderHeight = getRenderHeight();
-			int scaledWidth = v.width;
-			int scaledHeight = v.height;
-			int xOffset = (renderWidth - scaledWidth) / 2;
-			int yOffset = (renderHeight - scaledHeight) / 2;
-			float widthScale = scaledWidth / float(renderWidth);
-			float heightScale = scaledHeight / float(renderHeight);
-
-			// Invert equations above in setScissor
-			x = (x - xOffset) / widthScale;
-			y = (scaledHeight - (y - yOffset)) / heightScale - height;
-			width = width / widthScale;
-			height = height / heightScale;
-		}
-
-		lua_pushnumber(L, x);
-		lua_pushnumber(L, y);
+		lua_pushnumber(L, x - v.x);
+		lua_pushnumber(L, getRenderHeight() - (y + v.y + height));
 		lua_pushnumber(L, width);
 		lua_pushnumber(L, height);
 

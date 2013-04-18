@@ -32,7 +32,7 @@
 #include <graphics/Color.h>
 #include <image/Image.h>
 #include <image/ImageData.h>
-#include <window/Window.h>
+#include <window/ppapi/Window.h>
 
 #include "Font.h"
 #include "Image.h"
@@ -103,7 +103,7 @@ namespace gles2
 
 		Font * currentFont;
 		Image::Filter currentImageFilter;
-		love::window::Window *currentWindow;
+		love::window::ppapi::Window *currentWindow;
 
 		LineStyle lineStyle;
 		float lineWidth;
