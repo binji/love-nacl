@@ -1495,7 +1495,14 @@ void main() {
 		return shader
 	end
 
-        love.graphics.newPixelEffect = love.graphics.newShader
+	function love.graphics.newPixelEffect(pixelcode)
+		local shader = newShader(pixelcode)
+		local meta = getmetatable(shader)
+		meta.send = shader_dispatch_send
+		meta.sendBoolean = meta.sendFloat
+		return shader
+        end
+
         love.graphics.setPixelEffect = love.graphics.setShader
         love.graphics.getPixelEffect = love.graphics.getShader
 
