@@ -194,7 +194,7 @@ namespace gles2
 	void Graphics::clear()
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
-//		glLoadIdentity();
+		getContext()->modelViewStack.top().setIdentity();
 	}
 
 	void Graphics::present()
