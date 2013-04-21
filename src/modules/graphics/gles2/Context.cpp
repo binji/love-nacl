@@ -535,12 +535,21 @@ void Context::bindTextureToUnit(GLuint texture, int textureunit, bool restorepre
 void Context::deleteTexture(GLuint texture)
 {
 	// glDeleteTextures binds textureid 0 to all texture units the deleted texture was bound to
+	int oldtextureunit = state.curTextureUnit;
+
 	std::vector<GLuint>::iterator it;
 	for (it = state.textureUnits.begin(); it != state.textureUnits.end(); ++it)
 	{
+		int textureUnit = it - state.textureUnits.begin();
 		if (*it == texture)
+                {
+			setActiveTextureUnit(textureUnit);
+			glBindTexture(GL_TEXTURE_2D, 0);
 			*it = 0;
+		}
 	}
+
+	setActiveTextureUnit(oldtextureunit);
 
 	glDeleteTextures(1, &texture);
 }

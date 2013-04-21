@@ -49,6 +49,7 @@ namespace gles2
 		try
 		{
 			gd = r->getGlyphData(32);
+			type = (gd->getFormat() == love::font::GlyphData::FORMAT_LUMINANCE_ALPHA ? FONT_TRUETYPE : FONT_IMAGE);
 
 			// pre-allocate the element buffer with a small amount of space (can grow later)
 			elementBuffer = new VertexIndex(100);
@@ -62,16 +63,13 @@ namespace gles2
 			throw;
 		}
 
-		type = (gd->getFormat() == love::font::GlyphData::FORMAT_LUMINANCE_ALPHA ? FONT_TRUETYPE : FONT_IMAGE);
 		delete gd;
-		createTexture();
 	}
 
 	Font::~Font()
 	{
 		rasterizer->release();
 		unloadVolatile();
-                delete elementBuffer;
 	}
 
 	void Font::createTexture()
@@ -497,6 +495,8 @@ namespace gles2
 			iter++;
 		}
 		textures.clear();
+		delete elementBuffer;
+		elementBuffer = 0;
 	}
 
 	int Font::getAscent() const
