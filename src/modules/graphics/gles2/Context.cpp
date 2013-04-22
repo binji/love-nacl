@@ -361,6 +361,7 @@ float Context::getMaxPointSize() const
 }
 
 void Context::setMainViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
+	printf("setMainViewport(%d, %d, %d, %d)\n", x, y, width, height);
 	Viewport v(x, y, width, height);
 	if (viewportStack.empty())
 		viewportStack.push_back(v);

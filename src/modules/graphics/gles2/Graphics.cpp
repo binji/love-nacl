@@ -142,8 +142,9 @@ namespace gles2
 		ctx->setCapability(GL_TEXTURE_2D, true);
 		ctx->setActiveTextureUnit(0);
 
-		// Set the viewport to top-left corner
-		ctx->setMainViewport(0, 0, width, height);
+		int screenWidth = currentWindow->getScreenWidth();
+		int screenHeight = currentWindow->getScreenHeight();
+		currentWindow->onScreenChanged(screenWidth, screenHeight);
 
 		// Set the projection matrix to an orthographic view with no depth
 		ctx->projectionStack.push(Matrix());

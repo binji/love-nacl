@@ -145,7 +145,6 @@ extern pp::Instance* g_Instance;
 		screenToWindowMatrix.translate(-x, -y);
 		love::graphics::gles2::getContext()->setMainViewport(
 		    x, y, width, height);
-		::printf("setMainViewport(%g, %g, %d, %d)\n", x, y, width, height);
 	}
 
 	void Window::screenToWindow(int x, int y, int &out_x, int &out_y)
@@ -167,6 +166,7 @@ extern pp::Instance* g_Instance;
 
         bool Window::createContext(int width, int height)
         {
+		printf("createContext(%d, %d)\n", width, height);
 		if (!graphics_3d)
 		{
 			int32_t attribs[] = {
