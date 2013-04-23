@@ -3,16 +3,22 @@
 #include <vector>
 #include <AL/al.h>
 #include <AL/alc.h>
+#include "GLES2/gl2.h"
 #include <nacl_io/nacl_io.h>
+#include "ppapi/cpp/completion_callback.h"
 #include <ppapi/cpp/graphics_3d.h>
-#include <ppapi/cpp/instance.h>
 #include <ppapi/cpp/input_event.h>
+#include "ppapi/cpp/instance.h"
 #include <ppapi/cpp/module.h>
+#include "ppapi/cpp/url_loader.h"
+#include "ppapi/cpp/url_request_info.h"
 #include <ppapi/lib/gl/gles2/gl2ext_ppapi.h>
 
 #include <window/Window.h>
 #include <window/ppapi/Window.h>
 #include "Input.h"
+
+#define READ_BUFFER_SIZE (128 * 1024)
 
 
 int love_main(int argc, char** argv);
@@ -34,13 +40,21 @@ class Instance : public pp::Instance {
 
  private:
   static void* MainLoop(void*);
+  void Download();
 
   pthread_t main_loop_thread_;
-  std::string game_;
+  std::string url_;
+
+  pp::URLRequestInfo url_request_;
+  pp::URLLoader url_loader_;
+  char* buffer_;
 };
 
 Instance::Instance(PP_Instance instance)
-    : pp::Instance(instance) {
+    : pp::Instance(instance),
+      buffer_(new char[READ_BUFFER_SIZE]),
+      url_request_(this),
+      url_loader_(this) {
   PPB_GetInterface get_browser_interface =
       pp::Module::Get()->get_browser_interface();
   glInitializePPAPI(get_browser_interface);
@@ -51,6 +65,7 @@ Instance::Instance(PP_Instance instance)
 }
 
 Instance::~Instance() {
+  delete [] buffer_;
 }
 
 bool Instance::Init(uint32_t argc, const char* argn[], const char* argv[]) {
@@ -74,21 +89,8 @@ bool Instance::Init(uint32_t argc, const char* argn[], const char* argv[]) {
   if (!love_src.empty())
     src = love_src;
 
-  std::string base = "/";
-  if (!src.empty()) {
-    size_t last_slash = src.find_last_of('/');
-    if (last_slash != std::string::npos) {
-      base = src.substr(0, last_slash);
-      game_ = "/http/" + src.substr(last_slash + 1);
-    } else {
-      base = "";
-      game_ = "/http/" + src;
-    }
-  }
+  url_ = src;
 
-  printf("Game = %s\n", game_.c_str());
-
-  mount(base.c_str(), "/http", "httpfs", 0, "");
   mount("", "/persistent", "memfs", 0, "");
   // TODO(binji): figure out how to make this work...
 //  mount("", "/persistent", "html5fs", 0,
@@ -118,11 +120,74 @@ bool Instance::HandleInputEvent(const pp::InputEvent& event) {
 void* Instance::MainLoop(void* param) {
   Instance* instance = static_cast<Instance*>(param);
 
+  instance->Download();
+
   std::vector<const char*> args;
   args.push_back("/");
-  if (!instance->game_.empty())
-    args.push_back(instance->game_.c_str());
+  args.push_back("/persistent/download.love");
   love_main(args.size(), const_cast<char**>(args.data()));
+}
+
+void Instance::Download() {
+  int32_t result;
+  url_request_.SetURL(url_.c_str());
+  url_request_.SetMethod("GET");
+  url_request_.SetRecordDownloadProgress(true);
+  result = url_loader_.Open(url_request_, pp::CompletionCallback());
+  if (result != PP_OK) {
+    fprintf(stderr, "Cannot read from URL %s. Error %d\n", url_.c_str(),
+            result);
+    return;
+  }
+
+  Window* window = static_cast<Window*>(Window::getSingleton());
+  window->setWindow(32, 32, false, false, false);
+
+  int64_t total_received = 0;
+  int64_t total_bytes = 0;
+  int64_t total_written = 0;
+
+  FILE* outf = fopen("/persistent/download.love", "w+");
+  if (!outf) {
+    fprintf(stderr, "Cannot open output file\n");
+    return;
+  }
+
+  while (1) {
+    if (url_loader_.GetDownloadProgress(&total_received, &total_bytes)) {
+      printf("Downloading... %d of %d\n", total_received, total_bytes);
+    }
+
+    result = url_loader_.ReadResponseBody(&buffer_[0], READ_BUFFER_SIZE,
+                                          pp::CompletionCallback());
+    if (result < 0) {
+      fprintf(stderr, "Error reading from URL %s. Error %d\n", url_.c_str(),
+              result);
+      goto done;
+    } else if (result == 0) {
+      break;
+    }
+
+    size_t bytes_written = fwrite(&buffer_[0], 1, result, outf);
+    if (bytes_written != result) {
+      fprintf(stderr, "Error writing to output file\n");
+      goto done;
+    }
+
+    total_written += bytes_written;
+
+    float color = 1 - (total_received + total_written) / float(2 * total_bytes);
+//    glClearColor(color, color, color, 1.0f);
+//    glClear(GL_COLOR_BUFFER_BIT);
+
+//    window->swapBuffers();
+  }
+
+  printf("Done.\n");
+
+done:
+  fclose(outf);
+  return;
 }
 
 
