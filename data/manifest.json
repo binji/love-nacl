@@ -7,6 +7,13 @@
     "scripts": ["background.js"],
     "persistent": true
   },
+  "browser_action": {
+    "default_icon": {
+      "19": "nyu19.png",
+      "38": "nyu38.png"
+    },
+    "default_title": "LÖVE"
+  },
   "permissions": [
     "<all_urls>",
     "unlimitedStorage",

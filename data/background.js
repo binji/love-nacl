@@ -1,35 +1,43 @@
 console.log('adding listener!');
 
+var enabled = false;
+
 chrome.webRequest.onHeadersReceived.addListener(
   function (info) {
-    console.log(info.url);
-    var newHeaders = [];
-    for (var i = 0; i < info.responseHeaders.length; ++i) {
-      var headerObj = info.responseHeaders[i];
-      console.log(headerObj);
-      if (headerObj.name != 'Content-Disposition' ||
-          !/filename=.*?\.love\s*$/.test(headerObj.value)) {
-        newHeaders.push(headerObj);
-      }
+    if (!enabled) {
+      console.log('skipping '+info.url+' because disabled.');
+      return;
+    }
+    
+    if (/dropbox\.com/.test(info.url)) {
+      console.log('skipping '+info.url+' because it\'s a dropbox page.');
+      return;
     }
 
-    return {
-      responseHeaders: newHeaders
-    };
-  },
-  { urls: ['*://*.love2d.org/*file.php?id=*'] },
-  ['blocking', 'responseHeaders']
-);
-
-chrome.webRequest.onHeadersReceived.addListener(
-  function (info) {
     console.log(info.url);
     var newHeaders = [];
     for (var i = 0; i < info.responseHeaders.length; ++i) {
       var headerObj = info.responseHeaders[i];
-      console.log(headerObj);
-      if (headerObj.name != 'Content-Type')
-        newHeaders.push(headerObj);
+
+      if (headerObj.name.toLowerCase() == 'content-disposition') {
+        console.log('found content-disposition');
+        if (/filename=.*?\.love/.test(headerObj.value)) {
+          // Don't download!
+          console.log('skipping header '+headerObj.name+'='+headerObj.value);
+          continue;
+        } else {
+          // Content-Disposition, but no .love. Ignore.
+          console.log('skipping '+info.url+' because it\'s not love.');
+          return;
+        }
+      } else if (headerObj.name.toLowerCase() == 'content-type') {
+        // Skip Content-Type
+        console.log('skipping header '+headerObj.name+'='+headerObj.value);
+        continue;
+      }
+
+      console.log('adding header '+headerObj.name+'='+headerObj.value);
+      newHeaders.push(headerObj);
     }
 
     newHeaders.push({
@@ -41,6 +49,20 @@ chrome.webRequest.onHeadersReceived.addListener(
       responseHeaders: newHeaders
     };
   },
-  { urls: ['*://*/*.love'] },
+  { urls: ['*://*.love2d.org/*file.php?id=*',
+           '*://*.dropboxusercontent.com/*.love?*',
+           '*://*/*.love'] },
   ['blocking', 'responseHeaders']
+);
+
+var enabledIcon = {'path': {'19': 'nyu19_on.png', '38': 'nyu38_on.png'}};
+var disabledIcon = {'path': {'19': 'nyu19.png', '38': 'nyu38.png'}};
+
+chrome.browserAction.setIcon(enabled ? enabledIcon : disabledIcon);
+chrome.browserAction.onClicked.addListener(
+  function (tab) {
+    enabled = !enabled;
+    console.log('browserAction clicked! enabled=' + enabled);
+    chrome.browserAction.setIcon(enabled ? enabledIcon : disabledIcon);
+  }
 );
