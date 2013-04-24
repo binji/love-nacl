@@ -140,9 +140,6 @@ void Instance::Download() {
     return;
   }
 
-  Window* window = static_cast<Window*>(Window::getSingleton());
-  window->setWindow(32, 32, false, false, false);
-
   int64_t total_received = 0;
   int64_t total_bytes = 0;
   int64_t total_written = 0;
@@ -175,12 +172,6 @@ void Instance::Download() {
     }
 
     total_written += bytes_written;
-
-    float color = 1 - (total_received + total_written) / float(2 * total_bytes);
-//    glClearColor(color, color, color, 1.0f);
-//    glClear(GL_COLOR_BUFFER_BIT);
-
-//    window->swapBuffers();
   }
 
   printf("Done.\n");
