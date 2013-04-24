@@ -315,6 +315,10 @@ Build('out/index.css', 'cp', 'data/index.css')
 Build('out/index.js', 'cp', 'data/index.js')
 Build('out/background.js', 'cp', 'data/background.js')
 Build('out/manifest.json', 'cp', 'data/manifest.json')
+Build('out/nyu19.png', 'cp', 'data/nyu19.png')
+Build('out/nyu19_on.png', 'cp', 'data/nyu19_on.png')
+Build('out/nyu38.png', 'cp', 'data/nyu38.png')
+Build('out/nyu38_on.png', 'cp', 'data/nyu38_on.png')
 
 
 ################################################################################
