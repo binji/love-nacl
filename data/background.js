@@ -1,6 +1,6 @@
 console.log('adding listener!');
 
-var enabled = false;
+var enabled = true;
 
 chrome.webRequest.onHeadersReceived.addListener(
   function (info) {

@@ -113,7 +113,7 @@ namespace gles2
 						GL_UNSIGNED_BYTE,
 						&emptyData[0]);
 
-//		setFilter(filter);
+		setFilter(filter);
 	}
 
 	Font::Glyph * Font::addGlyph(int glyph)
@@ -157,7 +157,7 @@ namespace gles2
 							GL_UNSIGNED_BYTE,
 							gd->getData());
 
-//			setFilter(filter);
+			setFilter(filter);
 
 			g->texture = t;
 
@@ -469,6 +469,21 @@ namespace gles2
 		return mSpacing;
 	}
 
+	void Font::setFilter(const Image::Filter &f)
+	{
+		filter = f;
+
+		Context *ctx = getContext();
+
+		std::vector<GLuint>::const_iterator it;
+		for (it = textures.begin(); it != textures.end(); ++it)
+		{
+			ctx->bindTexture(*it);
+			ctx->setTextureFilter(f);
+		}
+	}
+
+
 	bool Font::loadVolatile()
 	{
 		createTexture();
@@ -478,7 +493,7 @@ namespace gles2
 	void Font::unloadVolatile()
 	{
 		Context *ctx = getContext();
-		
+
 		// nuke everything from orbit
 		std::map<unsigned int, Glyph *>::iterator it = glyphs.begin();
 		Glyph *g;

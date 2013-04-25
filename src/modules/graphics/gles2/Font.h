@@ -198,6 +198,9 @@ namespace gles2
 		**/
 		float getSpacing() const;
 
+		void setFilter(const Image::Filter &f);
+		const Image::Filter &getFilter();
+
 		// Implements Volatile.
 		bool loadVolatile();
 		void unloadVolatile();

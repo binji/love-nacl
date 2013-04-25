@@ -128,73 +128,15 @@ namespace gles2
 
 	void Image::setFilter(const Image::Filter& f)
 	{
-		GLint gmin, gmag;
-		gmin = gmag = 0; // so that they're not used uninitialized
-
-		switch(f.min)
-		{
-		case FILTER_LINEAR:
-			gmin = GL_LINEAR;
-			break;
-		case FILTER_NEAREST:
-			gmin = GL_NEAREST;
-			break;
-		default:
-			break;
-		}
-
-		switch(f.mag)
-		{
-		case FILTER_LINEAR:
-			gmag = GL_LINEAR;
-			break;
-		case FILTER_NEAREST:
-			gmag = GL_NEAREST;
-			break;
-		default:
-			break;
-		}
-
+		filter = f;
+	
 		bind();
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gmin);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gmag);
+		getContext()->setTextureFilter(f);
 	}
 
 	Image::Filter Image::getFilter() const
 	{
-		bind();
-
-		GLint gmin, gmag;
-
-		glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, &gmin);
-		glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, &gmag);
-
-		Image::Filter f;
-
-		switch(gmin)
-		{
-		case GL_NEAREST:
-			f.min = FILTER_NEAREST;
-			break;
-		case GL_LINEAR:
-		default:
-			f.min = FILTER_LINEAR;
-			break;
-		}
-
-		switch(gmin)
-		{
-		case GL_NEAREST:
-			f.mag = FILTER_NEAREST;
-			break;
-		case GL_LINEAR:
-		default:
-			f.mag = FILTER_LINEAR;
-			break;
-		}
-
-		return f;
+		return filter;
 	}
 
 	void Image::setWrap(Image::Wrap w)
