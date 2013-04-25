@@ -20,6 +20,9 @@ runclean: all
 run: all
 	@${CHROME_PATH} --load-extension=${PWD}/out ${CHROME_ARGS}
 
+run-package: all
+	@${CHROME_PATH} --load-extension=${PWD}/out/package ${CHROME_ARGS}
+
 debug: all
 	@${CHROME_PATH} --load-extension=${PWD}/out ${CHROME_ARGS} --enable-nacl-debug
 

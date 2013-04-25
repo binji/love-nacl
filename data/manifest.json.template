@@ -1,6 +1,6 @@
 {
-  "name": "LOVE player",
-  "version": "1.0.0",
+  "name": "LÖVE player",
+  "version": "0.1.0",
   "manifest_version": 2,
   "description": "...",
   "background": {
@@ -21,12 +21,13 @@
     "webRequestBlocking"
   ],
   "nacl_modules": [{
-    "path": "love_debug.nmf",
+    "path": "love_{{config}}.nmf",
     "mime_type": "application/x-love-game"
   }],
   "web_accessible_resources": [
-    "love_debug.nmf",
-    "love_x86_32_debug.nexe",
-    "love_x86_64_debug.nexe"
+[[for file in resources[:-1]:]]
+    "{{file}}",
+[[]]
+    "{{resources[-1]}}"
   ]
 }

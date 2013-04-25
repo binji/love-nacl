@@ -3,24 +3,26 @@
 ARCHES=('x86_32', 'x86_64', 'arm')
 CONFIGS=('debug', 'release')
 arch_config={'arch': ARCHES, 'config': CONFIGS}
+debug_keys = {'config': 'debug'}
+release_keys = {'config': 'release'}
 
 Variable('nacl_sdk_root', Args['nacl_sdk_root'])
 Variable('toolchain_dir', '$nacl_sdk_root/toolchain')
 Variable('toolchain_dir_x86', '$toolchain_dir/%s_x86_newlib' % Args['platform'])
 Variable('toolchain_dir_arm', '$toolchain_dir/%s_arm_newlib' % Args['platform'])
-Variable('cc-x86_32', '$toolchain_dir_x86/bin/i686-nacl-gcc')
-Variable('cxx-x86_32', '$toolchain_dir_x86/bin/i686-nacl-g++')
+Variable('ar-arm', '$toolchain_dir_arm/bin/arm-nacl-ar')
 Variable('ar-x86_32', '$toolchain_dir_x86/bin/i686-nacl-ar')
-Variable('cc-x86_64', '$toolchain_dir_x86/bin/x86_64-nacl-gcc')
-Variable('cxx-x86_64', '$toolchain_dir_x86/bin/x86_64-nacl-g++')
 Variable('ar-x86_64', '$toolchain_dir_x86/bin/x86_64-nacl-ar')
 Variable('cc-arm', '$toolchain_dir_arm/bin/arm-nacl-gcc')
+Variable('cc-x86_32', '$toolchain_dir_x86/bin/i686-nacl-gcc')
+Variable('cc-x86_64', '$toolchain_dir_x86/bin/x86_64-nacl-gcc')
 Variable('cxx-arm', '$toolchain_dir_arm/bin/arm-nacl-g++')
-Variable('ar-arm', '$toolchain_dir_arm/bin/arm-nacl-ar')
+Variable('cxx-x86_32', '$toolchain_dir_x86/bin/i686-nacl-g++')
+Variable('cxx-x86_64', '$toolchain_dir_x86/bin/x86_64-nacl-g++')
+Variable('strip-arm', '$toolchain_dir_arm/bin/arm-nacl-strip')
+Variable('strip-x86_32', '$toolchain_dir_x86/bin/i686-nacl-strip')
+Variable('strip-x86_64', '$toolchain_dir_x86/bin/x86_64-nacl-strip')
 Variable('nmf', '$nacl_sdk_root/tools/create_nmf.py')
-Variable('cc-host', 'gcc')
-Variable('cxx-host', 'g++')
-Variable('ar-host', 'ar')
 
 Rule('cp', 'cp $in $out', 'COPY $out')
 Rule('cc', '$cc $ccflags -MMD -MF $out.d -c $in -o $out', 'CC $out',
@@ -28,12 +30,15 @@ Rule('cc', '$cc $ccflags -MMD -MF $out.d -c $in -o $out', 'CC $out',
 Rule('ar', '$ar rc $out $in', 'AR $out')
 Rule('link', '$cc $in $ldflags -o $out', 'LINK $out')
 Rule('nmf', '$nmf $in -o $out', 'NMF $out')
+Rule('zip', 'zip $out -j $in', 'ZIP $out')
+Rule('strip', '$strip $in -o $out', 'STRIP $out')
 
 sources = Build('out/{arch}/{config}/{inf:-ext}.o', 'cc', '{inf}') \
     .Tag('{name}-sources')
 #lib = Build('out/{arch}/{config}/lib{name}.a', 'ar').Tag('{name}-lib')
 exe = Build('out/{name}_{arch}_{config}.nexe', 'link').Tag('{name}-exe')
 nmf = Build('out/{name}_{config}.nmf', 'nmf').Tag('{name}-nmf')
+data = Build('out/{inf}', 'cp', 'data/{inf}').Tag('{name}-data')
 
 LOVE_LUA = [
   'src/scripts/audio.lua',
@@ -295,6 +300,17 @@ LOVE_LIBS = [
   'nosys',
 ]
 
+LOVE_DATA_FILES = [
+  'background.js',
+  'index.css',
+  'index.html',
+  'index.js',
+  'nyu19_on.png',
+  'nyu19.png',
+  'nyu38_on.png',
+  'nyu38.png',
+]
+
 for b in sources.ForEach(name='love', inf=LOVE_SOURCES, **arch_config):
   b.Set('ccflags', Prefix('-I', LOVE_INCLUDE_DIRS))
   b.Append('ccflags', Prefix('-D', LOVE_DEFINES))
@@ -309,22 +325,51 @@ for b in nmf.ForEach(name='love', config=CONFIGS):
   b.Append('inputs',
     Select('love-exe').And(keys=b.SubKeys('config')).outputs)
 
-Build('out/index.html', 'cp', 'data/index.html')
-Build('out/index.css', 'cp', 'data/index.css')
-Build('out/index.js', 'cp', 'data/index.js')
-Build('out/background.js', 'cp', 'data/background.js')
-Build('out/manifest.json', 'cp', 'data/manifest.json')
-Build('out/nyu19.png', 'cp', 'data/nyu19.png')
-Build('out/nyu19_on.png', 'cp', 'data/nyu19_on.png')
-Build('out/nyu38.png', 'cp', 'data/nyu38.png')
-Build('out/nyu38_on.png', 'cp', 'data/nyu38_on.png')
+for b in data.ForEach(name='love', inf=LOVE_DATA_FILES):
+  pass
+
+Rule('manifest',
+     'script/generate_manifest.py -o $out -c $config -t $in $resources',
+     'MANIFEST $out',
+     implicit='script/generate_manifest.py')
+
+def GenerateManifest(out, config):
+  config_keys = {'config': config}
+  resources = Select('love-exe').And(keys=config_keys).outputs
+  resources += Select('love-nmf').And(keys=config_keys).outputs
+  resources = [Filename(n).Base for n in resources]
+
+  return Build(out, 'manifest', 'data/manifest.json.template',
+        config=config, resources=resources)
+
+GenerateManifest('out/manifest.json', 'debug')
+GenerateManifest('out/package/manifest.json', 'release').Tag('package')
+
+# Copy data files to packagedir
+for b in Select('love-data'):
+  n = Build('out/package/' + Filename(b.outputs).base, 'cp', b.outputs)
+  n.Tag('package')
+
+# Copy .nexes to packagedir, stripped.
+for b in Select('love-exe').And(keys=release_keys):
+  n = Build('out/package/' + Filename(b.outputs).Base, 'strip', b.outputs)
+  n.Set('strip', '$strip-' + b.keys['arch'])
+  n.Tag('package')
+
+# Copy .nmf to packagedir
+for b in Select('love-nmf').And(keys=release_keys):
+  n = Build('out/package/' + Filename(b.outputs).Base, 'cp', b.outputs)
+  n.Tag('package')
+
+# Zip files in package
+Build('out/package.zip', 'zip', Select('package').outputs)
 
 
 ################################################################################
 
-for b in Select(keys={'config': 'debug'}).And(rule='cc'):
+for b in Select(keys=debug_keys).And(rule='cc'):
   b.Append('ccflags', '-g -O0')
-for b in Select(keys={'config': 'release'}).And(rule='cc'):
+for b in Select(keys=release_keys).And(rule='cc'):
   b.Append('ccflags', '-g -O3')
 for b in Select(rule='cc'):
   ext = Filename(b.inputs).Extension
