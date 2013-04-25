@@ -302,6 +302,9 @@ LOVE_LIBS = [
 
 LOVE_DATA_FILES = [
   'background.js',
+  'icon16.png',
+  'icon48.png',
+  'icon128.png',
   'index.css',
   'index.html',
   'index.js',
