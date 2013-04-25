@@ -1,7 +1,6 @@
 # vim: set syntax=python
 
-#ARCHES=('x86_32', 'x86_64', 'arm')
-ARCHES=('x86_32', 'x86_64')
+ARCHES=('x86_32', 'x86_64', 'arm')
 CONFIGS=('debug', 'release')
 arch_config={'arch': ARCHES, 'config': CONFIGS}
 

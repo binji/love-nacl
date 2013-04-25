@@ -1,17 +1,20 @@
 #include <assert.h>
+#include <pthread.h>
+
 #include <string>
 #include <vector>
+
 #include <AL/al.h>
 #include <AL/alc.h>
 #include "GLES2/gl2.h"
 #include <nacl_io/nacl_io.h>
-#include "ppapi/cpp/completion_callback.h"
+#include <ppapi/cpp/completion_callback.h>
 #include <ppapi/cpp/graphics_3d.h>
 #include <ppapi/cpp/input_event.h>
-#include "ppapi/cpp/instance.h"
+#include <ppapi/cpp/instance.h>
 #include <ppapi/cpp/module.h>
-#include "ppapi/cpp/url_loader.h"
-#include "ppapi/cpp/url_request_info.h"
+#include <ppapi/cpp/url_loader.h>
+#include <ppapi/cpp/url_request_info.h>
 #include <ppapi/lib/gl/gles2/gl2ext_ppapi.h>
 
 #include <window/Window.h>

@@ -22,6 +22,8 @@
 #ifndef LOVE_GRAPHICS_OPENGL_VERTEX_BUFFER_H
 #define LOVE_GRAPHICS_OPENGL_VERTEX_BUFFER_H
 
+#include <stddef.h>
+
 // OpenGL
 #include <GLES2/gl2.h>
 
