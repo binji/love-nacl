@@ -1,67 +1,58 @@
-LÖVE is an *awesome* framework you can use to make 2D games in Lua. It's free, open-source, and works on Windows, Mac OS X and Linux.
+LÖVELINESS is a port of LÖVE to Native Client. Wow!
 
-Documentation
--------------
+Setting up the NaCl SDK
+-----------------------
 
-We use our [wiki][wiki] for documentation.
-If you need further help, feel free to ask on our [forums][forums], and last but not least there's the irc channel [#love on Freenode][irc].
+You'll probably need linux (or something linux-like).
 
-Compilation
------------
+These are the abbreviated steps, for more info see [here][sdk].
 
-###Windows
-Use the project files for Visual C++ 2008 or 2010 (2010 preferred) located in the platform dir.
+# Find a good place to put the SDK
+$ wget http://storage.googleapis.com/nativeclient-mirror/nacl/nacl_sdk/nacl_sdk.zip
+$ unzip nacl_sdk.zip
+$ cd nacl_sdk
+$ ./naclsdk update pepper_canary
+$ export NACL_SDK_ROOT=$PWD/pepper_canary
 
-###*nix
-Run platform/unix/automagic, then run ./configure and make.
+Now you have the most recent SDK installed, and NACL_SDK_ROOT points to it.
 
-###OSX
-Use the XCode project in platform/macosx.
 
-For both Windows and OSX there are dependencies available [here][dependencies].
+Setting up ninja
+----------------
 
-Repository information
-----------------------
+[Ninja][ninja] is a build system like Make, but faster and quieter.
 
-We use the 'default' branch for development, and therefore it should not be considered stable.
-Also used is the 'minor' branch, which is used for features in the next minor version and it is
-not our development target (which would be the next revision). (Version numbers formatted major.minor.revision.)
+# Find a good place to put ninja
+$ git clone git://github.com/martine/ninja.git
+$ cd ninja
+$ ./bootstrap.py
+$ # Move ./ninja in your PATH, or "export PATH=$PATH:$PWD"
 
-We tag all our releases (since we started using mercurial), and have binary downloads available for them.
 
-Builds
-------
+Setting up the Repo
+-------------------
 
-Releases are found in the 'downloads' section on bitbucket, are linked on [the site][site],
-and there's a ppa for ubuntu, [ppa:bartbes/love-stable][stableppa].
+# Find a good place to put love-nacl
+$ git clone git://github.com/binji/love-nacl
+$ cd love-nacl
+$ git submodule init
+$ git submodule update
 
-There are also unstable/nightly builds:
 
-- For windows they are located [here][winbuilds].
-- For ubuntu linux they are in [ppa:bartbes/love-unstable][unstableppa]
-- For arch linux there's [love-hg][aur] in the AUR.
-- For other linuxes and OSX there are currently no official builds.
+Building
+--------
 
-Dependencies
-------------
+$ make
 
-- SDL
-- OpenGL
-- OpenAL
-- Lua / LuaJIT / LLVM-lua
-- DevIL with MNG and TIFF
-- FreeType
-- PhysicsFS
-- ModPlug
-- mpg123
-- Vorbisfile
+The output is put in $PWD/out. The data needed for the package is in
+$PWD/out/package.
 
-[site]: http://love2d.org
-[wiki]: http://love2d.org/wiki
-[forums]: http://love2d.org/forums
-[irc]: irc://irc.freenode.net/love
-[dependencies]: http://love2d.org/sdk
-[winbuilds]: http://love2d.org/builds
-[stableppa]: https://launchpad.net/~bartbes/+archive/love-stable
-[unstableppa]: https://launchpad.net/~bartbes/+archive/love-unstable
-[aur]: http://aur.archlinux.org/packages.php?ID=35279
+
+Running
+-------
+
+$ export CHROME_PATH=/path/to/chrome
+$ make run-package
+
+[sdk]: https://developers.google.com/native-client/sdk/download
+[ninja]: http://martine.github.io/ninja/
