@@ -72,7 +72,7 @@ Instance::~Instance() {
 }
 
 bool Instance::Init(uint32_t argc, const char* argn[], const char* argv[]) {
-  RequestInputEvents(PP_INPUTEVENT_CLASS_MOUSE);
+  RequestInputEvents(PP_INPUTEVENT_CLASS_MOUSE | PP_INPUTEVENT_CLASS_WHEEL);
   RequestFilteringInputEvents(PP_INPUTEVENT_CLASS_KEYBOARD);
 
   InitializeEventQueue();

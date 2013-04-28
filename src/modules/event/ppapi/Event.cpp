@@ -81,6 +81,15 @@ Message* Event::convert(const love::window::ppapi::InputEvent& event) {
       }
       break;
 
+    case INPUT_WHEEL: {
+        arg1 = new Variant((double) GetMouseX());
+        arg2 = new Variant((double) GetMouseY());
+        const char* type = event.wheel.delta_y < 0 ? "wu" : "wd";
+        arg3 = new Variant(type, strlen(type));
+        msg = new Message("mousepressed", arg1, arg2, arg3);
+      }
+      break;
+
     case INPUT_KEY:
       switch (event.key.type) {
         case KEY_DOWN:
