@@ -41,7 +41,7 @@ namespace gles2
 {
 
 	Font::Font(love::font::Rasterizer * r, const Image::Filter& filter)
-	: rasterizer(r), elementBuffer(0), height(r->getHeight()), lineHeight(1), mSpacing(1), filter(filter)
+	: rasterizer(r), height(r->getHeight()), lineHeight(1), mSpacing(1), filter(filter)
 	{
 		r->retain();
 
@@ -51,15 +51,11 @@ namespace gles2
 			gd = r->getGlyphData(32);
 			type = (gd->getFormat() == love::font::GlyphData::FORMAT_LUMINANCE_ALPHA ? FONT_TRUETYPE : FONT_IMAGE);
 
-			// pre-allocate the element buffer with a small amount of space (can grow later)
-			elementBuffer = new VertexIndex(100);
-
 			loadVolatile();
 		}
 		catch (love::Exception &)
 		{
 			delete gd;
-			delete elementBuffer;
 			throw;
 		}
 
@@ -171,9 +167,15 @@ namespace gles2
 			const vertex *verts = q.getVertices();
 
 			// copy vertex data to the glyph and set proper bearing
-			for (int i = 0; i < 4; i++)
+			g->quad.vertices[0] = verts[0];
+			g->quad.vertices[1] = verts[1];
+			g->quad.vertices[2] = verts[2];
+			g->quad.vertices[3] = verts[0];
+			g->quad.vertices[4] = verts[2];
+			g->quad.vertices[5] = verts[3];
+
+			for (int i = 0; i < 6; i++)
 			{
-				g->quad.vertices[i] = verts[i];
 				g->quad.vertices[i].x += gd->getBearingX();
 				g->quad.vertices[i].y -= gd->getBearingY();
 			}
@@ -255,7 +257,7 @@ namespace gles2
 					float lineheight = getBaseline();
 
 					// set proper relative position
-					for (int i = 0; i < 4; i++)
+					for (int i = 0; i < 6; i++)
 					{
 						glyphquads[quadindex].vertices[i].x += dx;
 						glyphquads[quadindex].vertices[i].y += dy + lineheight;
@@ -296,29 +298,6 @@ namespace gles2
 
 		if (quadindex > 0 && glyphinfolist.size() > 0)
 		{
-			// Resize the element index buffer to fit the string size, if necessary
-			if (elementBuffer == 0 || (size_t) quadindex > elementBuffer->getSize())
-			{
-				VertexIndex *newelementbuffer = 0;
-				try
-				{
-					newelementbuffer = new VertexIndex(quadindex);
-				}
-				catch (love::Exception &)
-				{
-					ctx->modelViewStack.pop();
-					throw;
-				}
-				if (newelementbuffer)
-				{
-					delete elementBuffer;
-					elementBuffer = newelementbuffer;
-				}
-			}
-
-			// bind the index buffer for use with glDrawElements
-			VertexBuffer::Bind indexbind(*elementBuffer->getVertexBuffer());
-
 			// sort glyph draw info list by texture first, and quad position in memory second (using the struct's < operator)
 			std::sort(glyphinfolist.begin(), glyphinfolist.end());
 
@@ -334,11 +313,7 @@ namespace gles2
 			for (it = glyphinfolist.begin(); it != glyphinfolist.end(); ++it)
 			{
 				ctx->bindTexture(it->texture);
-
-				size_t numelements = elementBuffer->getIndexCount(it->numQuads);
-				size_t elementoffset = elementBuffer->getIndexCount(it->startQuad) * elementBuffer->getElementSize();
-
-				glDrawElements(GL_TRIANGLES, numelements, elementBuffer->getType(), elementBuffer->getPointer(elementoffset));
+				glDrawArrays(GL_TRIANGLES, 0, it->numQuads * 6);
 			}
 		}
 
@@ -510,8 +485,6 @@ namespace gles2
 			iter++;
 		}
 		textures.clear();
-		delete elementBuffer;
-		elementBuffer = 0;
 	}
 
 	int Font::getAscent() const

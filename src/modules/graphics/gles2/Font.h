@@ -54,7 +54,7 @@ namespace gles2
 		// thin wrapper for an array of 4 vertices
 		struct GlyphQuad
 		{
-			vertex vertices[4];
+			vertex vertices[6];
 		};
 
 
@@ -83,9 +83,6 @@ namespace gles2
 		};
 
 		love::font::Rasterizer * rasterizer;
-
-		// Element buffer used to allow glyphs to be drawn with 4 vertices per 2 triangles
-		VertexIndex *elementBuffer;
 
 		int height;
 		float lineHeight;
