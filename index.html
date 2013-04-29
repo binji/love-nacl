@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>LÖVELINESS</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="css/bootstrap.min.css" rel="stylesheet" media="screen"> 
+    <link href="css/main.css" rel="stylesheet" media="screen"> 
+    <link rel="shortcut icon" href="favicon.ico">
+  </head>
+  <body>
+    <div class="navbar navbar-fixed-top">
+      <div class="brand">
+        <a href="https://github.com/binji/love-nacl">LÖVELINESS</a>
+      </div>
+      <div class="navbar-inner">
+        <div class="container">
+          <ul class="nav">
+            <li><a href="#about">About</a>
+            <li><a href="#examples">LÖVELY Examples</a>
+            <li><a href="#distributing">Distributing</a>
+            <li><a href="#issues">Known Issues</a>
+            <li><a href="#credits">Credits</a>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      <a name="about"></a>
+      <section>
+        <div class="page-header">
+          <h1>About LÖVELINESS</h1>
+        </div>
+            <p>
+              Hi, everyone! <span class="loveliness">LÖVELINESS</span> is a
+              Chrome extension that lets you play <a
+                href="http://love2d.org">LÖVE</a> games in the browser. Neat,
+              huh?  It works using <a
+                href="https://developers.google.com/native-client">Native
+                Client</a>, a technology that runs native code on the web,
+              safely. Thank goodness for that.
+            </p>
+            <br>
+            <p>
+              You probably already know that <span class="loveliness">
+                LÖVELINESS</span> can be found in many places... a summer
+              breeze, strolling through tall grass. But did you know you can
+              also find it on the <a
+                href="https://chrome.google.com/webstore/detail/l%C3%B6veliness/mompnkcmpbopandjnddeecgeeojegohc">Chrome
+                Web Store</a>? After you install, you should see a little <span
+                class="nyu">nyu</span> in the upper-right.
+            </p>
+            <br>
+            <p class="well">When <span class="nyu">nyu</span> looks like <img
+              src="img/nyu19_on.png" alt="this">, the extension is enabled.
+              LÖVE on, little <span class="nyu">nyu</span>!</p>
+            <p class="well">When <span class="nyu">nyu</span> looks like <img
+              src="img/nyu19.png" alt="this">, the extension is disabled. No
+              LÖVEing for you. Your LÖVE will be downloaded instead!</p>
+            <br>
+            <p>
+              Bottom line: when <span class="nyu">nyu</span> is nice and green,
+              clicky clicky and play. Can it be that it is all so simple?
+            </p>
+            <br>
+            <a href="https://chrome.google.com/webstore/detail/l%C3%B6veliness/mompnkcmpbopandjnddeecgeeojegohc"><p class="text-center"><strong>What is all this text... I don't even... where do I DOWNLOAD?</strong></p></a>
+      </section>
+      <a name="examples"></a>
+      <section>
+        <div class="page-header">
+          <h1>Enough talk; LÖVELY examples!</h1>
+        </div>
+        <ul class="thumbnails">
+          <li class="span4">
+            <a href="love/lovalanche.love" class="thumbnail">
+              <img src="img/lovalanche.png">
+              <h3 class="caption">lovalanche</h3>
+            </a>
+          </li>
+          <li class="span4">
+            <a href="love/metaballs-fixed.love" class="thumbnail">
+              <img src="img/metaballs.png">
+              <h3 class="caption">metaballs</h3>
+            </a>
+          </li>
+          <li class="span4">
+            <a href="love/no.love" class="thumbnail">
+              <img src="img/no.png">
+              <h3 class="caption">no.love</h3>
+            </a>
+          </li>
+          <li class="span4">
+            <a href="love/particles.love" class="thumbnail">
+              <img src="img/particles.png">
+              <h3 class="caption">particles</h3>
+            </a>
+          </li>
+          <li class="span4">
+            <a href="love/passingclouds.love" class="thumbnail">
+              <img src="img/passingclouds.png">
+              <h3 class="caption">passingclouds</h3>
+            </a>
+          </li>
+          <li class="span4">
+            <a href="love/sinescroller.love" class="thumbnail">
+              <img src="img/sinescroller.png">
+              <h3 class="caption">sinescroller</h3>
+            </a>
+          </li>
+          <li class="span4">
+            <div class="thumbnail">
+              <a href="love/mari0_1.6.love">
+                <img src="img/mari0.png">
+                <h3 class="caption">mari0</h3>
+              </a>
+              by <a href="http://stabyourself.net/mari0/">stabyourself.net</a>
+            </div>
+          </li>
+          <li class="span4">
+            <div class="thumbnail">
+              <a href="love/iyfct.love">
+                <img src="img/iyfct.png">
+                <h3 class="caption">In Your Face City Trains</h3>
+              </a>
+              by <a href="https://github.com/SimonLarsen/iyfct">Simon Larsen</a>
+            </div>
+          </li>
+          <li class="span4">
+            <div class="thumbnail">
+              <a href="love/Ortho%20Robot.love">
+                <img src="img/ortho_robot.png">
+                <h3 class="caption">Ortho Robot</h3>
+              </a>
+              by <a href="http://stabyourself.net/orthorobot/">stabyourself.net</a>
+            </div>
+          </li>
+        </ul>
+      </section>
+      <a name="distributing"></a>
+      <section>
+        <div class="page-header">
+          <h1>Distributing</h1>
+        </div>
+        <p>
+          Here's the thing. The extension isn't as smart as you or me. It
+          doesn't know what LÖVE is. I mean, it doesn't know which files to
+          load as <code>.love</code> files. So it guesses!
+        </p>
+        <p>
+          Here are some pointers for distributing the love:
+          <ul>
+            <li>The extension really, truly appreciates it when you make your
+              webserver serve <code>.love</code> files using a mimetype of
+              <code>application/x-love-game</code>. It knows how to load those
+              without any guessing!</li>
+            <li><code>.love</code> files on the <a
+              href="http://love2d.org/forums/viewforum.php?f=5">LÖVE
+              forums</a> are automatically loaded correctly. Cheers!</li>
+            <li>Guess what? <code>.love</code> files anywhere on the entire
+              World Wide Web should work too! Just make sure there's no fancy
+              redirects involved...</li>
+            <li><strong>Bad news.</strong> Turns out that a lot of people put their
+              <code>.love</code> files inside a ZIP file. <span
+              class="loveliness">LÖVELINESS</span> doesn't know what to do
+              with it!</li>
+          </ul>
+        </p>
+      </section>
+      <a name="issues"></a>
+      <section>
+        <div class="page-header">
+          <h1>Known Issues</h1>
+        </div>
+        <p>
+          <span class="loveliness">LÖVELINESS</span> has bugs. It's true! And
+          unimplemented features. Yep, those too.
+          <br>
+          <ul>
+            <li>No writable files (well, they're writable, they just don't get
+              saved yet)</li>
+            <li>Keyboard works, but it doesn't send character codes yet. Most
+              games don't seem to use them...</li>
+            <li>SHADERS! Oh, They work. But (at least on my machine)
+              we're really picky about operations between floats and
+              integers. Stuff like this:<br>
+              <pre>Line 22: ERROR: '==' :  wrong operand types  no operation
+                '==' exists that takes a left-hand operand of type 'float' and
+                a right operand of type 'const mediump int' (or there is no
+                acceptable conversion)
+              </pre>
+              Usually you can fix this in the source by adding <code>.0</code>
+              to the integer.
+              </li>
+            <li>No fullscreen</li>
+            <li>No mouselock</li>
+
+          </ul>
+          Take a look at <a href="https://github.com/binji/love-nacl/issues">this</a>
+          if you want to see the full list. :)
+        </p>
+      </section>
+      <a name="credits"></a>
+      <section>
+        <div class="page-header">
+          <h1>Credits & Thanks</h1>
+        </div>
+        <p>
+          <ul>
+            <li>The LÖVE development team</li>
+            <li>slime for the OpenGL ES 2.0 port of LÖVE</li>
+            <li><a href="https://bitbucket.org/bartbes/">@bartbes</a> for
+              hosting it. :)</li>
+            <li><a href="http://stabyourself.net/">Stabyourself.net</a> for
+              the awesome LÖVE games!</li>
+            <li>All y'all making neato stuff on <a
+              href="http://love2d.org/forums/viewforum.php?f=5">the LÖVE
+              forums</a>
+            <li>You for reading the credits!</li>
+          </ul>
+          I helped a little too. <a href="https://github.com/binji">binji</a>
+        </p>
+      </section>
+    </div>
+    <div class="footer"></div>
+    <script src="js/bootstrap.min.js"></script>
+  </body>
+</html>
