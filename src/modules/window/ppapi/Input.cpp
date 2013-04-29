@@ -142,6 +142,13 @@ void InitializeEventQueue() {
   pthread_cond_init(&g_QueueNonEmpty, NULL);
 }
 
+void EnqueueFocusEvent(bool has_focus) {
+  InputEvent event;
+  event.type = INPUT_FOCUS;
+  event.focus.has_focus = has_focus;
+  EnqueueEvent(event);
+}
+
 void EnqueueEvent(const pp::InputEvent& event) {
   InputEvent converted_event;
   if (ConvertEvent(event, &converted_event))
@@ -223,6 +230,7 @@ void UpdateInputState(const InputEvents& events) {
 }
 
 void UpdateInputState(const InputEvent& event) {
+  Window* window = static_cast<Window*>(Window::getSingleton());
   switch (event.type) {
     case INPUT_MOUSE:
       g_MouseX = event.mouse.x;
@@ -254,10 +262,12 @@ void UpdateInputState(const InputEvent& event) {
     case INPUT_SCREEN_CHANGED:
       g_ScreenWidth = event.screen_changed.width;
       g_ScreenHeight = event.screen_changed.height;
+      window->onScreenChanged(event.screen_changed.width,
+                              event.screen_changed.height);
+      break;
 
-      static_cast<Window*>(Window::getSingleton())->onScreenChanged(
-          event.screen_changed.width,
-          event.screen_changed.height);
+    case INPUT_FOCUS:
+      window->onFocusChanged(event.focus.has_focus);
       break;
   }
 }

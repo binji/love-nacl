@@ -16,6 +16,7 @@ enum InputType {
   INPUT_MOUSE,
   INPUT_WHEEL,
   INPUT_SCREEN_CHANGED,
+  INPUT_FOCUS,
   INPUT_TYPE_MAX,
 };
 
@@ -238,6 +239,10 @@ struct ScreenChangedEvent {
   int height;
 };
 
+struct FocusEvent {
+  bool has_focus;
+};
+
 struct InputEvent {
   InputType type;
   uint32_t modifiers;
@@ -247,12 +252,14 @@ struct InputEvent {
     MouseEvent mouse;
     WheelEvent wheel;
     ScreenChangedEvent screen_changed;
+    FocusEvent focus;
   };
 };
 
 typedef std::vector<InputEvent> InputEvents;
 
 void InitializeEventQueue();
+void EnqueueFocusEvent(bool has_focus);
 void EnqueueEvent(const pp::InputEvent& event);
 void EnqueueEvent(const InputEvent& event);
 bool DequeueEvent(InputEvent* out_event);

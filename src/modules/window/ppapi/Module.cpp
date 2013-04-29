@@ -39,6 +39,7 @@ class Instance : public pp::Instance {
 
   virtual bool Init(uint32_t argc, const char* argn[], const char* argv[]);
   virtual void DidChangeView(const pp::View& view);
+  virtual void DidChangeFocus(bool has_focus);
   virtual bool HandleInputEvent(const pp::InputEvent& event);
 
  private:
@@ -113,6 +114,10 @@ void Instance::DidChangeView(const pp::View& view) {
   event.screen_changed.width = size.width();
   event.screen_changed.height = size.height();
   EnqueueEvent(event);
+}
+
+void Instance::DidChangeFocus(bool has_focus) {
+  EnqueueFocusEvent(has_focus);
 }
 
 bool Instance::HandleInputEvent(const pp::InputEvent& event) {

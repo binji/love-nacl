@@ -29,7 +29,8 @@ extern pp::Instance* g_Instance;
 		  width(800),
 		  height(600),
 		  screenWidth(screenWidth),
-		  screenHeight(screenHeight)
+		  screenHeight(screenHeight),
+                  focused(false)
 	{
 		singleton = this;
 	}
@@ -121,6 +122,7 @@ extern pp::Instance* g_Instance;
 
 	bool Window::hasFocus()
 	{
+		return focused;
 	}
 
 	void Window::setMouseVisible(bool visible)
@@ -145,6 +147,10 @@ extern pp::Instance* g_Instance;
 		screenToWindowMatrix.translate(-x, -y);
 		love::graphics::gles2::getContext()->setMainViewport(
 		    x, y, width, height);
+	}
+
+	void Window::onFocusChanged(bool hasFocus) {
+		focused = hasFocus;
 	}
 
 	void Window::screenToWindow(int x, int y, int &out_x, int &out_y)

@@ -29,6 +29,7 @@ namespace ppapi
 		int screenWidth;
 		int screenHeight;
 		bool created;
+		bool focused;
 
 		Matrix screenToWindowMatrix;
 
@@ -63,7 +64,8 @@ namespace ppapi
 		void setMouseVisible(bool visible);
 		bool getMouseVisible();
 
-                void onScreenChanged(int width, int height);
+		void onScreenChanged(int width, int height);
+		void onFocusChanged(bool has_focus);
 
 		void screenToWindow(int x, int y, int &out_x, int &out_y);
 
