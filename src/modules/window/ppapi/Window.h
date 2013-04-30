@@ -8,6 +8,8 @@
 #include <common/Matrix.h>
 #include <window/Window.h>
 
+#include <ppapi/cpp/fullscreen.h>
+
 namespace pp {
 class Graphics3D;
 }  // namespace pp
@@ -21,7 +23,8 @@ namespace ppapi
 	class Window : public love::window::Window
 	{
 	private:
-		pp::Graphics3D* graphics_3d;
+		pp::Fullscreen fullscreen;
+		pp::Graphics3D* graphics3d;
 		int width;
 		int height;
 		int contextWidth;

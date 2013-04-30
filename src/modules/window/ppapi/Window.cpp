@@ -25,12 +25,13 @@ extern pp::Instance* g_Instance;
 
 	Window::Window(int screenWidth, int screenHeight)
 		: created(false),
-		  graphics_3d(NULL),
+		  fullscreen(g_Instance),
+		  graphics3d(NULL),
 		  width(800),
 		  height(600),
 		  screenWidth(screenWidth),
 		  screenHeight(screenHeight),
-                  focused(false)
+		  focused(false)
 	{
 		singleton = this;
 	}
@@ -39,19 +40,26 @@ extern pp::Instance* g_Instance;
 	{
 	}
 
-	bool Window::setWindow(int width, int height, bool fullscreen, bool vsync, int fsaa)
+	bool Window::setWindow(int width, int height, bool wantFullscreen, bool vsync, int fsaa)
 	{
+		if (wantFullscreen != fullscreen.IsFullscreen())
+		{
+			// Wait until the screen changed before changing
+			// anything else.
+			return fullscreen.SetFullscreen(wantFullscreen);
+		}
+
 		this->width = width;
 		this->height = height;
 		onScreenChanged(screenWidth, screenHeight);
 		return true;
 	}
 
-	void Window::getWindow(int &width, int &height, bool &fullscreen, bool &vsync, int &fsaa)
+	void Window::getWindow(int &width, int &height, bool &isFullscreen, bool &vsync, int &fsaa)
 	{
 		width = this->width;
 		height = this->height;
-		fullscreen = false;
+		isFullscreen = fullscreen.IsFullscreen();
 		vsync = true;
 		fsaa = false;
 	}
@@ -117,7 +125,7 @@ extern pp::Instance* g_Instance;
 	void Window::swapBuffers()
 	{
 		// Blocking.
-		graphics_3d->SwapBuffers(pp::CompletionCallback());
+		graphics3d->SwapBuffers(pp::CompletionCallback());
 	}
 
 	bool Window::hasFocus()
@@ -173,7 +181,7 @@ extern pp::Instance* g_Instance;
         bool Window::createContext(int width, int height)
         {
 		printf("createContext(%d, %d)\n", width, height);
-		if (!graphics_3d)
+		if (!graphics3d)
 		{
 			int32_t attribs[] = {
 				PP_GRAPHICS3DATTRIB_ALPHA_SIZE, 8,
@@ -184,8 +192,8 @@ extern pp::Instance* g_Instance;
 				PP_GRAPHICS3DATTRIB_NONE
 			};
 
-			graphics_3d = new pp::Graphics3D(g_Instance, attribs);
-			if (!g_Instance->BindGraphics(*graphics_3d))
+			graphics3d = new pp::Graphics3D(g_Instance, attribs);
+			if (!g_Instance->BindGraphics(*graphics3d))
 				goto failed;
 			printf("New buffer: %dx%d\n", width, height);
 		}
@@ -200,7 +208,7 @@ extern pp::Instance* g_Instance;
 
 			printf("Old buffer: %dx%d\n", contextWidth, contextHeight);
 
-			int32_t result = graphics_3d->ResizeBuffers(width, height);
+			int32_t result = graphics3d->ResizeBuffers(width, height);
 			if (result != PP_OK)
 				goto failed;
 			printf("Resized buffer: %dx%d\n", width, height);
@@ -209,14 +217,14 @@ extern pp::Instance* g_Instance;
 		contextWidth = width;
 		contextHeight = height;
 
-		glSetCurrentContextPPAPI(graphics_3d->pp_resource());
+		glSetCurrentContextPPAPI(graphics3d->pp_resource());
 		created = true;
 		return true;
 
 	failed:
 		printf("Failed...\n");
-		delete graphics_3d;
-		graphics_3d = NULL;
+		delete graphics3d;
+		graphics3d = NULL;
 		return false;
 	}
 } // ppapi
