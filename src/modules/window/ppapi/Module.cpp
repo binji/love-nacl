@@ -1,5 +1,7 @@
 #include <assert.h>
+#include <fcntl.h>
 #include <pthread.h>
+#include <stdio.h>
 
 #include <string>
 #include <vector>
@@ -127,6 +129,14 @@ bool Instance::HandleInputEvent(const pp::InputEvent& event) {
 
 void* Instance::MainLoop(void* param) {
   Instance* instance = static_cast<Instance*>(param);
+
+  // redirect stdout/stderr to console.
+  int fd1 = open("/dev/console0", O_WRONLY);
+  int fd2 = open("/dev/console3", O_WRONLY);
+  dup2(fd1, 1);
+  dup2(fd2, 2);
+  setvbuf(stdout, NULL, _IOLBF, 0);
+  setvbuf(stderr, NULL, _IOLBF, 0);
 
   instance->Download();
 

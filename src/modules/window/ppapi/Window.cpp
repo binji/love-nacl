@@ -180,7 +180,6 @@ extern pp::Instance* g_Instance;
 
         bool Window::createContext(int width, int height)
         {
-		printf("createContext(%d, %d)\n", width, height);
 		if (!graphics3d)
 		{
 			int32_t attribs[] = {
@@ -195,23 +194,19 @@ extern pp::Instance* g_Instance;
 			graphics3d = new pp::Graphics3D(g_Instance, attribs);
 			if (!g_Instance->BindGraphics(*graphics3d))
 				goto failed;
-			printf("New buffer: %dx%d\n", width, height);
 		}
 		else
 		{
 			// no need to resize.
 			if (width == contextWidth && height == contextHeight)
 			{
-				printf("Buffer already %dx%d\n", width, height);
 				return true;
 			}
 
-			printf("Old buffer: %dx%d\n", contextWidth, contextHeight);
 
 			int32_t result = graphics3d->ResizeBuffers(width, height);
 			if (result != PP_OK)
 				goto failed;
-			printf("Resized buffer: %dx%d\n", width, height);
 		}
 
 		contextWidth = width;
@@ -222,7 +217,7 @@ extern pp::Instance* g_Instance;
 		return true;
 
 	failed:
-		printf("Failed...\n");
+		fprintf(stderr, "Failed to create Graphics3D context!\n");
 		delete graphics3d;
 		graphics3d = NULL;
 		return false;
