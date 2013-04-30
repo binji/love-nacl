@@ -33,10 +33,11 @@ namespace ppapi
 		int screenHeight;
 		bool created;
 		bool focused;
+                int fsaa;
 
 		Matrix screenToWindowMatrix;
 
-		bool createContext(int width, int height);
+		bool createContext(int width, int height, int wantFsaa);
 
 	public:
 		Window(int screenWidth, int screenHeight);
@@ -68,6 +69,7 @@ namespace ppapi
 		bool getMouseVisible();
 
 		void onScreenChanged(int width, int height);
+		void onScreenChanged(int width, int height, int wantFsaa);
 		void onFocusChanged(bool has_focus);
 
 		void screenToWindow(int x, int y, int &out_x, int &out_y);

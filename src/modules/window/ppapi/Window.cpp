@@ -31,7 +31,8 @@ extern pp::Instance* g_Instance;
 		  height(600),
 		  screenWidth(screenWidth),
 		  screenHeight(screenHeight),
-		  focused(false)
+		  focused(false),
+                  fsaa(0)
 	{
 		singleton = this;
 	}
@@ -40,28 +41,31 @@ extern pp::Instance* g_Instance;
 	{
 	}
 
-	bool Window::setWindow(int width, int height, bool wantFullscreen, bool vsync, int fsaa)
+	bool Window::setWindow(int width, int height, bool wantFullscreen, bool vsync, int wantFsaa)
 	{
+          printf("setWindow(%d, %d, %d, %d, %d)\n", width, height, wantFullscreen, vsync, wantFsaa);
 		if (wantFullscreen != fullscreen.IsFullscreen())
 		{
 			// Wait until the screen changed before changing
 			// anything else.
+			printf("Changing fullscreen %d->%d\n",
+			       fullscreen.IsFullscreen(), wantFullscreen);
 			return fullscreen.SetFullscreen(wantFullscreen);
 		}
 
 		this->width = width;
 		this->height = height;
-		onScreenChanged(screenWidth, screenHeight);
+		onScreenChanged(screenWidth, screenHeight, wantFsaa);
 		return true;
 	}
 
-	void Window::getWindow(int &width, int &height, bool &isFullscreen, bool &vsync, int &fsaa)
+	void Window::getWindow(int &width, int &height, bool &isFullscreen, bool &vsync, int &isFsaa)
 	{
 		width = this->width;
 		height = this->height;
 		isFullscreen = fullscreen.IsFullscreen();
 		vsync = true;
-		fsaa = false;
+		isFsaa = fsaa;
 	}
 
 	bool Window::checkWindowSize(int width, int height, bool fullscreen)
@@ -144,9 +148,14 @@ extern pp::Instance* g_Instance;
 
 	void Window::onScreenChanged(int w, int h)
 	{
+		onScreenChanged(w, h, fsaa);
+	}
+
+	void Window::onScreenChanged(int w, int h, int wantFsaa)
+	{
 		screenWidth = w;
 		screenHeight = h;
-		if (!createContext(w, h))
+		if (!createContext(w, h, wantFsaa))
 			return;
 
 		float x = 0.5f * (screenWidth - width);
@@ -178,19 +187,26 @@ extern pp::Instance* g_Instance;
 		return "love.window.ppapi";
 	}
 
-        bool Window::createContext(int width, int height)
+        bool Window::createContext(int width, int height, int wantFsaa)
         {
-		printf("createContext(%d, %d)\n", width, height);
-		if (!graphics3d)
+		printf("createContext(%dx%d, fsaa: %d->%d)\n",
+                       width, height, fsaa, wantFsaa);
+		if (!graphics3d || wantFsaa != fsaa)
 		{
 			int32_t attribs[] = {
-				PP_GRAPHICS3DATTRIB_ALPHA_SIZE, 8,
 				PP_GRAPHICS3DATTRIB_SAMPLES, 0,
 				PP_GRAPHICS3DATTRIB_SAMPLE_BUFFERS, 0,
+				PP_GRAPHICS3DATTRIB_ALPHA_SIZE, 8,
 				PP_GRAPHICS3DATTRIB_WIDTH, width,
 				PP_GRAPHICS3DATTRIB_HEIGHT, height,
 				PP_GRAPHICS3DATTRIB_NONE
 			};
+
+			if (wantFsaa) {
+				// N samples, 1 sample buffer.
+				attribs[1] = wantFsaa;
+				attribs[3] = 1;
+			}
 
 			graphics3d = new pp::Graphics3D(g_Instance, attribs);
 			if (!g_Instance->BindGraphics(*graphics3d))
@@ -216,6 +232,7 @@ extern pp::Instance* g_Instance;
 
 		contextWidth = width;
 		contextHeight = height;
+                fsaa = wantFsaa;
 
 		glSetCurrentContextPPAPI(graphics3d->pp_resource());
 		created = true;
