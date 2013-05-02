@@ -211,6 +211,7 @@ enum KeyCode {
 struct KeyEvent {
   KeyType type;
   uint32_t code;
+  char text[5];
 };
 
 struct CharacterEvent {

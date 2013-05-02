@@ -12,6 +12,42 @@ namespace love {
 namespace event {
 namespace ppapi {
 
+uint32_t DecodeUtf8(const char (&text)[5]) {
+  // Bit pattern:
+  // 1-byte 0xxxxxxx
+  // 2-byte 110xxxxx 10xxxxxx
+  // 3-byte 1110xxxx 10xxxxxx 10xxxxxx
+  // 4-byte 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+  // 5-byte 111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
+  if ((text[0] & 0x80) == 0) {
+    // ASCII
+    return text[0];
+  } else if ((text[0] & 0xE0) == 0xC0) {
+    // 2-bytes.
+    return (text[0] & 0x1f) << 6 |
+           (text[1] & 0x3f);
+  } else if ((text[0] & 0xF0) == 0xE0) {
+    // 3-bytes.
+    return (text[0] & 0x0f) << 12 |
+           (text[1] & 0x3f) << 6 |
+           (text[2] & 0x3f);
+  } else if ((text[0] & 0xF8) == 0xF0) {
+    // 4-bytes.
+    return (text[0] & 0x07) << 18 |
+           (text[1] & 0x3f) << 12 |
+           (text[2] & 0x3f) << 6 |
+           (text[3] & 0x3f);
+  } else if ((text[0] & 0xFC) == 0xF8) {
+    // 5-bytes.
+    return (text[0] & 0x03) << 24 |
+           (text[1] & 0x3f) << 18 |
+           (text[2] & 0x3f) << 12 |
+           (text[3] & 0x3f) << 6;
+           (text[4] & 0x3f);
+  }
+  return 0;
+}
+
 const char * Event::getName() const {
   return "love.event.ppapi";
 }
@@ -28,9 +64,10 @@ void Event::pump() {
   for (InputEvents::iterator iter = events.begin();
       iter != events.end();
       ++iter) {
-    msg = convert(*iter);
+    const InputEvent& event = *iter;
+    msg = convert(event);
     if (msg) {
-      push(convert(*iter));
+      push(msg);
       msg->release();
     }
   }
@@ -98,7 +135,7 @@ Message* Event::convert(const love::window::ppapi::InputEvent& event) {
           if (love::keyboard::ppapi::Keyboard::Convert((KeyCode) event.key.code, &key) &&
               love::event::Event::keys.find(key, txt)) {
             arg1 = new Variant(txt, strlen(txt));
-            arg2 = new Variant((double) 0);  // TODO(binji): fix
+            arg2 = new Variant((double) DecodeUtf8(event.key.text));
             const char* type = event.key.type == KEY_DOWN ?
                 "keypressed" : "keyreleased";
             msg = new Message(type, arg1, arg2);

@@ -11,18 +11,18 @@ namespace window {
 namespace ppapi {
 
 
-int g_MouseX;
-int g_MouseY;
-bool g_MouseButton[MOUSE_BUTTON_MAX];
-bool g_Keys[KEY_CODE_MAX];
-int g_ScreenWidth;
-int g_ScreenHeight;
-bool g_KeyRepeat = false;
+int g_mouse_x;
+int g_mouse_y;
+bool g_mouse_button[MOUSE_BUTTON_MAX];
+bool g_keys[KEY_CODE_MAX];
+int g_screen_width;
+int g_screen_height;
+bool g_key_repeat = false;
 
 typedef std::deque<InputEvent> InputEventQueue;
-InputEventQueue g_InputEventQueue;
-pthread_mutex_t g_EventQueueMutex;
-pthread_cond_t g_QueueNonEmpty;
+InputEventQueue g_input_event_queue;
+pthread_mutex_t g_event_queue_mutex;
+pthread_cond_t g_queue_non_empty;
 
 void UpdateInputState(const InputEvent& event);
 void UpdateInputState(const InputEvents& events);
@@ -108,9 +108,12 @@ bool ConvertEvent(const pp::InputEvent& in_event, InputEvent* out_event) {
     case INPUT_KEY: {
       pp::KeyboardInputEvent key_event(in_event);
       out_event->key.code = key_event.GetKeyCode();
+      memset(out_event->key.text, 0, sizeof(out_event->key.text));
+
       // Kill repeated keys if it is turned off.
-      if (!g_KeyRepeat) {
-        if (out_event->key.type == KEY_DOWN && IsKeyPressed(out_event->key.code))
+      if (!g_key_repeat) {
+        if (out_event->key.type == KEY_DOWN &&
+            IsKeyPressed(out_event->key.code))
             return false;
       }
       break;
@@ -119,7 +122,7 @@ bool ConvertEvent(const pp::InputEvent& in_event, InputEvent* out_event) {
       pp::KeyboardInputEvent key_event(in_event);
       strncpy(out_event->character.text,
               key_event.GetCharacterText().AsString().c_str(),
-              5);
+              sizeof(out_event->key.text));
       break;
     }
   }
@@ -138,8 +141,8 @@ void FixEvent(InputEvent* event) {
 }
 
 void InitializeEventQueue() {
-  pthread_mutex_init(&g_EventQueueMutex, NULL);
-  pthread_cond_init(&g_QueueNonEmpty, NULL);
+  pthread_mutex_init(&g_event_queue_mutex, NULL);
+  pthread_cond_init(&g_queue_non_empty, NULL);
 }
 
 void EnqueueFocusEvent(bool has_focus) {
@@ -160,65 +163,82 @@ void EnqueueEvent(const InputEvent& event) {
   memcpy(&fixed_event, &event, sizeof(InputEvent));
   FixEvent(&fixed_event);
 
-  pthread_mutex_lock(&g_EventQueueMutex);
-  g_InputEventQueue.push_back(fixed_event);
-  pthread_cond_signal(&g_QueueNonEmpty);
-  pthread_mutex_unlock(&g_EventQueueMutex);
+  pthread_mutex_lock(&g_event_queue_mutex);
+  // Try to combine this character event with a previous key event.
+  // It's possible that we've already sent off the INPUT_KEY event without
+  // attaching its accompanying INPUT_CHARACTER event, but it's still better
+  // than waiting for an INPUT_CHARACTER event when we receive an INPUT_KEY
+  // event.
+  if (event.type == INPUT_CHARACTER) {
+    if (!g_input_event_queue.empty()) {
+      InputEvent& prev_event = g_input_event_queue.back();
+      if (prev_event.type == INPUT_KEY && prev_event.key.type == KEY_DOWN) {
+        strncpy(prev_event.key.text, event.character.text,
+                sizeof(prev_event.key.text));
+        pthread_mutex_unlock(&g_event_queue_mutex);
+        return;
+      }
+    }
+  }
+
+  g_input_event_queue.push_back(fixed_event);
+  pthread_cond_signal(&g_queue_non_empty);
+  pthread_mutex_unlock(&g_event_queue_mutex);
 }
 
 bool DequeueEvent(InputEvent* out_event) {
   bool has_event = false;
-  pthread_mutex_lock(&g_EventQueueMutex);
-  if (!g_InputEventQueue.empty()) {
-    *out_event = g_InputEventQueue.front();
-    g_InputEventQueue.pop_front();
+  pthread_mutex_lock(&g_event_queue_mutex);
+  if (!g_input_event_queue.empty()) {
+    *out_event = g_input_event_queue.front();
+    g_input_event_queue.pop_front();
     has_event = true;
   }
-  pthread_mutex_unlock(&g_EventQueueMutex);
+  pthread_mutex_unlock(&g_event_queue_mutex);
   UpdateInputState(*out_event);
   return has_event;
 }
 
 void DequeueAllEvents(InputEvents* out_events) {
-  pthread_mutex_lock(&g_EventQueueMutex);
-  out_events->resize(g_InputEventQueue.size());
-  std::copy(g_InputEventQueue.begin(), g_InputEventQueue.end(),
+  pthread_mutex_lock(&g_event_queue_mutex);
+  out_events->resize(g_input_event_queue.size());
+  std::copy(g_input_event_queue.begin(), g_input_event_queue.end(),
             out_events->begin());
-  g_InputEventQueue.clear();
-  pthread_mutex_unlock(&g_EventQueueMutex);
+  g_input_event_queue.clear();
+  pthread_mutex_unlock(&g_event_queue_mutex);
   UpdateInputState(*out_events);
 }
 
 void WaitForEvent() {
-  pthread_mutex_lock(&g_EventQueueMutex);
-  while (g_InputEventQueue.empty()) {
-    pthread_cond_wait(&g_QueueNonEmpty, &g_EventQueueMutex);
+  pthread_mutex_lock(&g_event_queue_mutex);
+  while (g_input_event_queue.empty()) {
+    pthread_cond_wait(&g_queue_non_empty, &g_event_queue_mutex);
   }
-  pthread_mutex_unlock(&g_EventQueueMutex);
+  pthread_mutex_unlock(&g_event_queue_mutex);
 }
 
 int GetMouseX() {
-  return g_MouseX;
+  return g_mouse_x;
 }
 
 int GetMouseY() {
-  return g_MouseY;
+  return g_mouse_y;
 }
 
 bool IsMouseButtonPressed(MouseButton button) {
   if (button <= MOUSE_NONE || button >= MOUSE_BUTTON_MAX)
     return false;
-  return g_MouseButton[button];
+  return g_mouse_button[button];
 }
 
 bool IsKeyPressed(uint32_t code) {
   if (code >= KEY_CODE_MAX)
     return false;
-  return g_Keys[code];
+  return g_keys[code];
 }
 
 void SetKeyRepeat(bool repeat) {
-  g_KeyRepeat = repeat;
+  g_key_repeat = repeat;
 }
 
 void UpdateInputState(const InputEvents& events) {
@@ -233,15 +253,15 @@ void UpdateInputState(const InputEvent& event) {
   Window* window = static_cast<Window*>(Window::getSingleton());
   switch (event.type) {
     case INPUT_MOUSE:
-      g_MouseX = event.mouse.x;
-      g_MouseY = event.mouse.y;
+      g_mouse_x = event.mouse.x;
+      g_mouse_y = event.mouse.y;
 
       switch (event.mouse.type) {
         case MOUSE_DOWN:
-          g_MouseButton[event.mouse.button] = true;
+          g_mouse_button[event.mouse.button] = true;
           break;
         case MOUSE_UP:
-          g_MouseButton[event.mouse.button] = false;
+          g_mouse_button[event.mouse.button] = false;
           break;
       }
       break;
@@ -250,18 +270,18 @@ void UpdateInputState(const InputEvent& event) {
       switch (event.key.type) {
         case KEY_DOWN:
           if (event.key.code < KEY_CODE_MAX)
-            g_Keys[event.key.code] = true;
+            g_keys[event.key.code] = true;
           break;
         case KEY_UP:
           if (event.key.code < KEY_CODE_MAX)
-            g_Keys[event.key.code] = false;
+            g_keys[event.key.code] = false;
           break;
       }
       break;
 
     case INPUT_SCREEN_CHANGED:
-      g_ScreenWidth = event.screen_changed.width;
-      g_ScreenHeight = event.screen_changed.height;
+      g_screen_width = event.screen_changed.width;
+      g_screen_height = event.screen_changed.height;
       window->onScreenChanged(event.screen_changed.width,
                               event.screen_changed.height);
       break;
