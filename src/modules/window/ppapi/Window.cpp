@@ -144,6 +144,8 @@ extern pp::Instance* g_Instance;
 
 	void Window::onScreenChanged(int w, int h)
 	{
+		using namespace love::graphics::gles2;
+
 		screenWidth = w;
 		screenHeight = h;
 		if (!createContext(w, h))
@@ -153,8 +155,9 @@ extern pp::Instance* g_Instance;
 		float y = 0.5f * (screenHeight - height);
 		screenToWindowMatrix.setIdentity();
 		screenToWindowMatrix.translate(-x, -y);
-		love::graphics::gles2::getContext()->setMainViewport(
-		    x, y, width, height);
+
+		getContext()->setScreenToWindowMatrix(screenToWindowMatrix);
+		getContext()->setMainViewport(x, y, width, height);
 	}
 
 	void Window::onFocusChanged(bool hasFocus) {
