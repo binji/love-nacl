@@ -23,6 +23,11 @@ function onTestClicked(e) {
   window.close();
 }
 
+function onLoadFileClicked(e) {
+  chrome.tabs.create({url: 'index.html'});
+  window.close();
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   chrome.runtime.getBackgroundPage(function (backgroundWindow) {
     setEnabledText(backgroundWindow.enabled);
@@ -33,4 +38,5 @@ document.addEventListener('DOMContentLoaded', function () {
 
   $('#enableLink').addEventListener('click', onEnableClicked, false);
   $('#testLink').addEventListener('click', onTestClicked, false);
+  $('#loadFileLink').addEventListener('click', onLoadFileClicked, false);
 });

@@ -1,12 +1,38 @@
 body {
   margin: 0;
+  background-color: #fff;
+  -webkit-transition: background-color .3s;
 }
-#listener {
-  height: 100%;
+body.loading {
+  background-color: #000;
+}
+.fullscreen {
+  bottom: 0;
+  display: -webkit-flex;
+  left: 0;
   position: absolute;
-  width: 100%;
+  right: 0;
+  top: 0;
+  -webkit-flex-direction: row;
+}
+#dropTarget {
+  background-color: #fff;
+  border: 4px dashed #ccc;
+  margin: 20px;
+  -webkit-transition: background-color, margin;
+  -webkit-transition-duration: .3s;
+}
+#dropTarget.dragover {
+  margin: 30px;
+  background-color: #eee;
+}
+#dropTarget > span {
+  color: #468847;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 38.5px;
+  margin: auto;
 }
 embed {
-  height: 100%;
   width: 100%;
+  height: 100%;
 }
