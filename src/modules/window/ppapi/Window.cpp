@@ -34,6 +34,7 @@ extern pp::Instance* g_Instance;
 		  focused(false)
 	{
 		singleton = this;
+		singleton->retain();
 	}
 
 	Window::~Window()
@@ -46,7 +47,7 @@ extern pp::Instance* g_Instance;
 		{
 			// Wait until the screen changed before changing
 			// anything else.
-			return fullscreen.SetFullscreen(wantFullscreen);
+			if (fullscreen.SetFullscreen(wantFullscreen)) return true;
 		}
 
 		this->width = width;

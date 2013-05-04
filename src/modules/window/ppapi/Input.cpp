@@ -132,11 +132,10 @@ bool ConvertEvent(const pp::InputEvent& in_event, InputEvent* out_event) {
 
 void FixEvent(InputEvent* event) {
   if (event->type == INPUT_MOUSE) {
-    // Scale the x and y coordinates by the aspect scale.
-    int window_x, window_y;
-    static_cast<Window*>(Window::getSingleton())->screenToWindow(
-        event->mouse.x, event->mouse.y,
-        event->mouse.x, event->mouse.y);
+    Window* window = static_cast<Window*>(Window::getSingleton());
+    if (window)
+      window->screenToWindow(event->mouse.x, event->mouse.y,
+                             event->mouse.x, event->mouse.y);
   }
 }
 

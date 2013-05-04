@@ -109,6 +109,7 @@ void Instance::DidChangeView(const pp::View& view) {
   if (!Window::getSingleton()) {
     new Window(size.width(), size.height());
     pthread_create(&main_loop_thread_, NULL, MainLoop, this);
+    return;
   }
 
   InputEvent event;
