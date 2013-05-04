@@ -144,6 +144,10 @@ void* Instance::MainLoop(void* param) {
   std::vector<const char*> args;
   args.push_back("/");
   args.push_back("/persistent/download.love");
+
+  // Notify the JavaScript that we're OK!
+  instance->PostMessage("OK");
+
   love_main(args.size(), const_cast<char**>(args.data()));
 }
 

@@ -300,20 +300,6 @@ LOVE_LIBS = [
   'nosys',
 ]
 
-LOVE_DATA_FILES = [
-  'background.js',
-  'icon16.png',
-  'icon48.png',
-  'icon128.png',
-  'index.css',
-  'index.html',
-  'index.js',
-  'nyu19_on.png',
-  'nyu19.png',
-  'nyu38_on.png',
-  'nyu38.png',
-]
-
 for b in sources.ForEach(name='love', inf=LOVE_SOURCES, **arch_config):
   b.Set('ccflags', Prefix('-I', LOVE_INCLUDE_DIRS))
   b.Append('ccflags', Prefix('-D', LOVE_DEFINES))
@@ -328,9 +314,71 @@ for b in nmf.ForEach(name='love', config=CONFIGS):
   b.Append('inputs',
     Select('love-exe').And(keys=b.SubKeys('config')).outputs)
 
+
+#
+# TEST Nexe
+#
+
+TEST_SOURCES = [
+  'src/test.cc',
+]
+
+TEST_INCLUDE_DIRS = [
+  '$nacl_sdk_root/include',
+]
+
+TEST_LIB_DIRS = [
+  '$nacl_sdk_root/lib/newlib_{arch}/Release',
+]
+
+TEST_LIBS = [
+  'ppapi_gles2',
+  'ppapi_cpp',
+  'ppapi',
+]
+
+for b in sources.ForEach(name='test', inf=TEST_SOURCES, **arch_config):
+  b.Set('ccflags', Prefix('-I', TEST_INCLUDE_DIRS))
+
+for b in exe.ForEach(name='test', **arch_config):
+  b.Set('ldflags', Prefix('-L', TEST_LIB_DIRS))
+  b.Set('ldflags', Prefix('-l', TEST_LIBS))
+  b.Set('inputs', Select('test-sources').And(keys=b.keys).outputs)
+
+for b in nmf.ForEach(name='test', config=CONFIGS):
+  b.Append('inputs',
+    Select('test-exe').And(keys=b.SubKeys('config')).outputs)
+
+
+#
+# Data files
+#
+LOVE_DATA_FILES = [
+  'background.js',
+  'bootstrap.min.css',
+  'icon128.png',
+  'icon16.png',
+  'icon48.png',
+  'index.css',
+  'index.html',
+  'index.js',
+  'nyu19_on.png',
+  'nyu19.png',
+  'nyu38_on.png',
+  'nyu38.png',
+  'popup.css',
+  'popup.html',
+  'popup.js',
+  'test.html',
+  'test.js',
+]
+
 for b in data.ForEach(name='love', inf=LOVE_DATA_FILES):
   pass
 
+#
+# Manifest files
+#
 Rule('manifest',
      'script/generate_manifest.py -o $out -c $config -t $in $resources',
      'MANIFEST $out',
@@ -348,19 +396,20 @@ def GenerateManifest(out, config):
 GenerateManifest('out/manifest.json', 'debug')
 GenerateManifest('out/package/manifest.json', 'release').Tag('package')
 
+
 # Copy data files to packagedir
 for b in Select('love-data'):
   n = Build('out/package/' + Filename(b.outputs).base, 'cp', b.outputs)
   n.Tag('package')
 
 # Copy .nexes to packagedir, stripped.
-for b in Select('love-exe').And(keys=release_keys):
+for b in Select('love-exe', 'test-exe').And(keys=release_keys):
   n = Build('out/package/' + Filename(b.outputs).Base, 'strip', b.outputs)
   n.Set('strip', '$strip-' + b.keys['arch'])
   n.Tag('package')
 
-# Copy .nmf to packagedir
-for b in Select('love-nmf').And(keys=release_keys):
+# Copy .nmfs to packagedir
+for b in Select('love-nmf', 'test-nmf').And(keys=release_keys):
   n = Build('out/package/' + Filename(b.outputs).Base, 'cp', b.outputs)
   n.Tag('package')
 

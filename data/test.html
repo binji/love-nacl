@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>LÖVELINESS</title>
+    <script type="text/javascript" src="test.js"></script>
+    <link href="bootstrap.min.css" rel="stylesheet" media="screen">
+    <style>
+      h1 {
+        border-bottom: 1px solid #ccc;
+        color: #468847;
+        margin-bottom: 1em;
+        text-align: center;
+      }
+      table {
+        font-size: 28px;
+        width: 100%;
+      }
+      .table th,
+      .table td {
+        border-top: 0;
+        line-height: 34px;
+      }
+      .step-ok {
+        width: 1px;
+      }
+      .buttons {
+        float: right;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="offset3 span6">
+          <h1>Testing LÖVELINESS</h1>
+          <table class="table">
+            <thead>
+              <tr><td class="step"></td><td class="step-ok"></td></tr>
+            </thead>
+            <tbody id="steps">
+            </tbody>
+          </table>
+        </div>
+        <div class="row-fluid" id="alertSuccess" hidden>
+          <div class="offset3 span6">
+            <div>
+              <div class="alert alert-success">
+                All Good!
+              </div>
+              Everything seems to work. Try some
+              <span class="text-success">examples</span>!
+            </div>
+            <div class="buttons">
+              <button class="btn btn-success" id="alertExamples">
+                Examples, sure!
+              </button>
+              <button class="btn" id="alertClose">
+                No, thanks.
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="row-fluid" id="alertError" hidden>
+          <div class="offset3 span6">
+            <h2>Error</h2>
+            <div class="alert alert-error" id="alertErrorMsg"></div>
+            <p>
+              Please report this issue on GitHub. Make sure to include the
+              message above as well as info from
+              <a href="chrome://gpu" target="_blank">chrome://gpu</a> and
+              <a href="chrome://version" target="_blank">chrome://version</a>.
+            </p>
+            <div class="buttons">
+              <button class="btn btn-primary" id="alertFileIssue">
+                Report Issue
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="workspace"></div>
+      </div>
+    </div>
+  </body>
+</html>
+

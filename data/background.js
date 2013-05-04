@@ -1,5 +1,3 @@
-console.log('adding listener!');
-
 var enabled = true;
 
 chrome.webRequest.onHeadersReceived.addListener(
@@ -8,7 +6,7 @@ chrome.webRequest.onHeadersReceived.addListener(
       console.log('skipping '+info.url+' because disabled.');
       return;
     }
-    
+
     if (/dropbox\.com/.test(info.url)) {
       console.log('skipping '+info.url+' because it\'s a dropbox page.');
       return;
@@ -59,10 +57,27 @@ var enabledIcon = {'path': {'19': 'nyu19_on.png', '38': 'nyu38_on.png'}};
 var disabledIcon = {'path': {'19': 'nyu19.png', '38': 'nyu38.png'}};
 
 chrome.browserAction.setIcon(enabled ? enabledIcon : disabledIcon);
-chrome.browserAction.onClicked.addListener(
-  function (tab) {
-    enabled = !enabled;
-    console.log('browserAction clicked! enabled=' + enabled);
-    chrome.browserAction.setIcon(enabled ? enabledIcon : disabledIcon);
+function toggleEnabled() {
+  enabled = !enabled;
+  console.log('toggleEnabled called! enabled=' + enabled);
+  chrome.browserAction.setIcon(enabled ? enabledIcon : disabledIcon);
+  return enabled;
+}
+
+function showUpdateBadge() {
+  chrome.browserAction.setBadgeBackgroundColor({color: '#468847'});
+  chrome.browserAction.setBadgeText({text: '\u2191'});
+}
+
+function hideBadge() {
+  chrome.browserAction.setBadgeText({text: ''});
+}
+
+// Show the test page on first install.
+chrome.runtime.onInstalled.addListener(function (details) {
+  if (details.reason === 'install') {
+    chrome.tabs.create({url: 'test.html'});
+  } else if (details.reason === 'update') {
+    showUpdateBadge();
   }
-);
+});

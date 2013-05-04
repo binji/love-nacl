@@ -12,7 +12,8 @@
       "19": "nyu19.png",
       "38": "nyu38.png"
     },
-    "default_title": "LÖVELINESS"
+    "default_title": "LÖVELINESS",
+    "default_popup": "popup.html"
   },
   "icons": {
     "16": "icon16.png",
