@@ -81,3 +81,13 @@ chrome.runtime.onInstalled.addListener(function (details) {
     showUpdateBadge();
   }
 });
+
+// Cool trick to modify auto-generated embed page:
+// See https://groups.google.com/d/msg/native-client-discuss/UJu7VXvV_bw/pLc19D50gbwJ
+chrome.tabs.onCreated.addListener(function (tab) {
+  chrome.tabs.executeScript(tab.id, {file: 'inject.js'});
+});
+
+chrome.tabs.onUpdated.addListener(function (tab) {
+  chrome.tabs.executeScript(tab.id, {file: 'inject.js'});
+});

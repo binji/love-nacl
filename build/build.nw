@@ -362,6 +362,7 @@ LOVE_DATA_FILES = [
   'index.css',
   'index.html',
   'index.js',
+  'inject.js',
   'nyu19_on.png',
   'nyu19.png',
   'nyu38_on.png',

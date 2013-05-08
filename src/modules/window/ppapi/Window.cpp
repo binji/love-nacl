@@ -1,6 +1,8 @@
 /**
 **/
 
+#include <stdio.h>
+
 // STL
 #include <iostream>
 
@@ -12,6 +14,7 @@
 #include <ppapi/cpp/completion_callback.h>
 #include <ppapi/cpp/instance.h>
 #include <ppapi/cpp/graphics_3d.h>
+#include <ppapi/cpp/var.h>
 #include <ppapi/lib/gl/gles2/gl2ext_ppapi.h>
 
 namespace love
@@ -52,6 +55,11 @@ extern pp::Instance* g_Instance;
 
 		this->width = width;
 		this->height = height;
+
+                char buffer[32];
+                snprintf(buffer, 32, "setWindow:%d,%d", width, height);
+                g_Instance->PostMessage(&buffer[0]);
+
 		onScreenChanged(screenWidth, screenHeight);
 		return true;
 	}
