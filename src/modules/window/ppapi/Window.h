@@ -27,19 +27,14 @@ namespace ppapi
 		pp::Graphics3D* graphics3d;
 		int width;
 		int height;
-		int contextWidth;
-		int contextHeight;
-		int screenWidth;
-		int screenHeight;
 		bool created;
 		bool focused;
 
-		Matrix screenToWindowMatrix;
-
 		bool createContext(int width, int height);
+                void updateWindow();
 
 	public:
-		Window(int screenWidth, int screenHeight);
+		Window();
 		~Window();
 
 		bool setWindow(int width = 800, int height = 600, bool fullscreen = false, bool vsync = true, int fsaa = 0);
@@ -50,9 +45,6 @@ namespace ppapi
 
 		int getWidth();
 		int getHeight();
-
-		int getScreenWidth();
-		int getScreenHeight();
 
 		bool isCreated();
 
@@ -67,10 +59,7 @@ namespace ppapi
 		void setMouseVisible(bool visible);
 		bool getMouseVisible();
 
-		void onScreenChanged(int width, int height);
 		void onFocusChanged(bool has_focus);
-
-		void screenToWindow(int x, int y, int &out_x, int &out_y);
 
 		static love::window::Window *getSingleton();
 

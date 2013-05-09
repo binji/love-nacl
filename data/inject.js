@@ -25,7 +25,6 @@ if (document.embeds[0] &&
           return;
 
         var msg = e.data;
-        console.log("Got message: " + e.data);
         var setWindowMsg = 'setWindow:';
         if (msg.lastIndexOf(setWindowMsg, 0) === 0) {
           var value = msg.substr(setWindowMsg.length);
@@ -33,8 +32,6 @@ if (document.embeds[0] &&
           if (comma >= 0) {
             var w = parseInt(value.substr(0, comma), 10);
             var h = parseInt(value.substr(comma + 1), 10);
-            console.log('setWindow ' + w + 'x' + h);
-
             embedEl.width = w + 'px';
             embedEl.height = h + 'px';
           }

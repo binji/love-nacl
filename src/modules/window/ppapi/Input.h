@@ -15,7 +15,6 @@ enum InputType {
   INPUT_CHARACTER,
   INPUT_MOUSE,
   INPUT_WHEEL,
-  INPUT_SCREEN_CHANGED,
   INPUT_FOCUS,
   INPUT_TYPE_MAX,
 };
@@ -235,11 +234,6 @@ struct WheelEvent {
   bool scroll_by_page;
 };
 
-struct ScreenChangedEvent {
-  int width;
-  int height;
-};
-
 struct FocusEvent {
   bool has_focus;
 };
@@ -252,7 +246,6 @@ struct InputEvent {
     CharacterEvent character;
     MouseEvent mouse;
     WheelEvent wheel;
-    ScreenChangedEvent screen_changed;
     FocusEvent focus;
   };
 };

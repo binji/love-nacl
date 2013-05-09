@@ -142,9 +142,7 @@ namespace gles2
 		ctx->setCapability(GL_TEXTURE_2D, true);
 		ctx->setActiveTextureUnit(0);
 
-		int screenWidth = currentWindow->getScreenWidth();
-		int screenHeight = currentWindow->getScreenHeight();
-		currentWindow->onScreenChanged(screenWidth, screenHeight);
+		ctx->setMainViewport(0, 0, width, height);
 
 		// Set the projection matrix to an orthographic view with no depth
 		ctx->projectionStack.push(Matrix());
@@ -234,14 +232,14 @@ namespace gles2
 	int Graphics::getRenderWidth() {
 		if (Canvas::current)
 			return Canvas::current->getWidth();
-		return currentWindow->getScreenWidth();
+		return currentWindow->getWidth();
 	}
 
 	int Graphics::getRenderHeight()
 	{
 		if (Canvas::current)
 			return Canvas::current->getHeight();
-		return currentWindow->getScreenHeight();
+		return currentWindow->getHeight();
 	}
 
 	bool Graphics::isCreated()

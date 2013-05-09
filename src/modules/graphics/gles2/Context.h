@@ -84,7 +84,6 @@ public:
 	std::stack<Matrix> modelViewStack;
 	std::stack<Matrix> projectionStack;
 	std::vector<Viewport> viewportStack;
-        Matrix screenToWindowMatrix;
 
 	Context();
 	~Context();
@@ -275,8 +274,6 @@ public:
 	 */
 	graphics::Image::Wrap getTextureWrap() const;
 
-	void setScreenToWindowMatrix(const Matrix& m);
-
 private:
 
 	void initCapabilityState();
@@ -309,7 +306,6 @@ private:
 		// The currently active transformation matrices used when rendering.
 		Matrix modelViewMatrix;
 		Matrix projectionMatrix;
-		Matrix screenToWindowMatrix;
 
 		// Map of vertex attributes to internal OpenGL attribute indices.
 		std::map<unsigned int, GLenum> vertexAttribMap;

@@ -26,18 +26,14 @@ namespace ppapi
 
 extern pp::Instance* g_Instance;
 
-	Window::Window(int screenWidth, int screenHeight)
+	Window::Window()
 		: created(false),
 		  fullscreen(g_Instance),
 		  graphics3d(NULL),
-		  width(800),
-		  height(600),
-		  screenWidth(screenWidth),
-		  screenHeight(screenHeight),
+		  width(0),
+		  height(0),
 		  focused(false)
 	{
-		singleton = this;
-		singleton->retain();
 	}
 
 	Window::~Window()
@@ -48,19 +44,10 @@ extern pp::Instance* g_Instance;
 	{
 		if (wantFullscreen != fullscreen.IsFullscreen())
 		{
-			// Wait until the screen changed before changing
-			// anything else.
-			if (fullscreen.SetFullscreen(wantFullscreen)) return true;
+			fullscreen.SetFullscreen(wantFullscreen);
 		}
 
-		this->width = width;
-		this->height = height;
-
-                char buffer[32];
-                snprintf(buffer, 32, "setWindow:%d,%d", width, height);
-                g_Instance->PostMessage(&buffer[0]);
-
-		onScreenChanged(screenWidth, screenHeight);
+		createContext(width, height);
 		return true;
 	}
 
@@ -85,10 +72,10 @@ extern pp::Instance* g_Instance;
 		n = 1;
 		WindowSize **sizes = new WindowSize*[n];
 
-                // TODO(binji): revisit
-                sizes[0] = new WindowSize;
-                sizes[0]->width = 800;
-                sizes[0]->height = 600;
+		// TODO(binji): revisit
+		sizes[0] = new WindowSize;
+		sizes[0]->width = 800;
+		sizes[0]->height = 600;
 		return sizes;
 	}
 
@@ -100,16 +87,6 @@ extern pp::Instance* g_Instance;
 	int Window::getHeight()
 	{
 		return height;
-	}
-
-	int Window::getScreenWidth()
-	{
-		return screenWidth;
-	}
-
-	int Window::getScreenHeight()
-	{
-		return screenHeight;
 	}
 
 	bool Window::isCreated()
@@ -134,7 +111,10 @@ extern pp::Instance* g_Instance;
 	void Window::swapBuffers()
 	{
 		// Blocking.
-		graphics3d->SwapBuffers(pp::CompletionCallback());
+		if (graphics3d)
+                {
+			graphics3d->SwapBuffers(pp::BlockUntilComplete());
+		}
 	}
 
 	bool Window::hasFocus()
@@ -151,37 +131,18 @@ extern pp::Instance* g_Instance;
 		return true;
 	}
 
-	void Window::onScreenChanged(int w, int h)
-	{
-		using namespace love::graphics::gles2;
-
-		screenWidth = w;
-		screenHeight = h;
-		if (!createContext(w, h))
-			return;
-
-		float x = 0.5f * (screenWidth - width);
-		float y = 0.5f * (screenHeight - height);
-		screenToWindowMatrix.setIdentity();
-		screenToWindowMatrix.translate(-x, -y);
-
-		getContext()->setScreenToWindowMatrix(screenToWindowMatrix);
-		getContext()->setMainViewport(x, y, width, height);
-	}
-
-	void Window::onFocusChanged(bool hasFocus) {
+	void Window::onFocusChanged(bool hasFocus)
+        {
 		focused = hasFocus;
-	}
-
-	void Window::screenToWindow(int x, int y, int &out_x, int &out_y)
-	{
-		Vector out = screenToWindowMatrix.transform(Vector(x, y));
-		out_x = static_cast<int>(out.x);
-		out_y = static_cast<int>(out.y);
 	}
 
 	love::window::Window *Window::getSingleton()
 	{
+		if (!singleton)
+			singleton = new Window();
+		else
+			singleton->retain();
+
 		return singleton;
 	}
 
@@ -190,7 +151,7 @@ extern pp::Instance* g_Instance;
 		return "love.window.ppapi";
 	}
 
-        bool Window::createContext(int width, int height)
+        bool Window::createContext(int w, int h)
         {
 		if (!graphics3d)
 		{
@@ -199,33 +160,37 @@ extern pp::Instance* g_Instance;
 				PP_GRAPHICS3DATTRIB_STENCIL_SIZE, 8,
 				PP_GRAPHICS3DATTRIB_SAMPLES, 0,
 				PP_GRAPHICS3DATTRIB_SAMPLE_BUFFERS, 0,
-				PP_GRAPHICS3DATTRIB_WIDTH, width,
-				PP_GRAPHICS3DATTRIB_HEIGHT, height,
+				PP_GRAPHICS3DATTRIB_WIDTH, w,
+				PP_GRAPHICS3DATTRIB_HEIGHT, h,
 				PP_GRAPHICS3DATTRIB_NONE
 			};
 
 			graphics3d = new pp::Graphics3D(g_Instance, attribs);
 			if (!g_Instance->BindGraphics(*graphics3d))
 				goto failed;
+
+			glSetCurrentContextPPAPI(graphics3d->pp_resource());
 		}
 		else
 		{
 			// no need to resize.
-			if (width == contextWidth && height == contextHeight)
+			if (w == width && h == height)
 			{
 				return true;
 			}
 
-
-			int32_t result = graphics3d->ResizeBuffers(width, height);
+			int32_t result = graphics3d->ResizeBuffers(w, h);
 			if (result != PP_OK)
 				goto failed;
 		}
 
-		contextWidth = width;
-		contextHeight = height;
+		width = w;
+		height = h;
 
-		glSetCurrentContextPPAPI(graphics3d->pp_resource());
+		char buffer[32];
+		snprintf(buffer, 32, "setWindow:%d,%d", w, h);
+		g_Instance->PostMessage(&buffer[0]);
+
 		created = true;
 		return true;
 
@@ -235,6 +200,7 @@ extern pp::Instance* g_Instance;
 		graphics3d = NULL;
 		return false;
 	}
+
 } // ppapi
 } // window
 } // love

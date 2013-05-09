@@ -1291,7 +1291,6 @@ do
 uniform mat4 ModelViewMatrix;
 uniform mat4 ProjectionMatrix;
 uniform mat4 ModelViewProjectionMatrix;
-uniform mat4 ScreenToWindowMatrix;
 uniform mat3 NormalMatrix;
 //uniform float PointSize = 1.0;
 uniform float PointSize;
@@ -1325,8 +1324,7 @@ void main() {
 void main() {
 	// fix crashing issue in OSX when _tex0_ is unused within effect()
 	float dummy = texture2D(_tex0_, vec2(.5)).r;
-        vec4 windowFragCoord = ScreenToWindowMatrix * vec4(gl_FragCoord.xy, 0, 1);
-	gl_FragColor = effect(VaryingColor, _tex0_, VaryingTexCoord, windowFragCoord.xy);
+	gl_FragColor = effect(VaryingColor, _tex0_, VaryingTexCoord, gl_FragCoord.xy);
 }]]
 
 

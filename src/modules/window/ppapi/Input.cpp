@@ -15,8 +15,6 @@ int g_mouse_x;
 int g_mouse_y;
 bool g_mouse_button[MOUSE_BUTTON_MAX];
 bool g_keys[KEY_CODE_MAX];
-int g_screen_width;
-int g_screen_height;
 bool g_key_repeat = false;
 
 typedef std::deque<InputEvent> InputEventQueue;
@@ -130,15 +128,6 @@ bool ConvertEvent(const pp::InputEvent& in_event, InputEvent* out_event) {
   return true;
 }
 
-void FixEvent(InputEvent* event) {
-  if (event->type == INPUT_MOUSE) {
-    Window* window = static_cast<Window*>(Window::getSingleton());
-    if (window)
-      window->screenToWindow(event->mouse.x, event->mouse.y,
-                             event->mouse.x, event->mouse.y);
-  }
-}
-
 void InitializeEventQueue() {
   pthread_mutex_init(&g_event_queue_mutex, NULL);
   pthread_cond_init(&g_queue_non_empty, NULL);
@@ -158,10 +147,6 @@ void EnqueueEvent(const pp::InputEvent& event) {
 }
 
 void EnqueueEvent(const InputEvent& event) {
-  InputEvent fixed_event;
-  memcpy(&fixed_event, &event, sizeof(InputEvent));
-  FixEvent(&fixed_event);
-
   pthread_mutex_lock(&g_event_queue_mutex);
   // Try to combine this character event with a previous key event.
   // It's possible that we've already sent off the INPUT_KEY event without
@@ -180,7 +165,7 @@ void EnqueueEvent(const InputEvent& event) {
     }
   }
 
-  g_input_event_queue.push_back(fixed_event);
+  g_input_event_queue.push_back(event);
   pthread_cond_signal(&g_queue_non_empty);
   pthread_mutex_unlock(&g_event_queue_mutex);
 }
@@ -276,13 +261,6 @@ void UpdateInputState(const InputEvent& event) {
             g_keys[event.key.code] = false;
           break;
       }
-      break;
-
-    case INPUT_SCREEN_CHANGED:
-      g_screen_width = event.screen_changed.width;
-      g_screen_height = event.screen_changed.height;
-      window->onScreenChanged(event.screen_changed.width,
-                              event.screen_changed.height);
       break;
 
     case INPUT_FOCUS:

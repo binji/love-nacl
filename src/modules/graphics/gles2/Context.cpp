@@ -226,7 +226,6 @@ void Context::setupRender()
 
 	bool mvmatrixchanged = shaderchanged || modelViewMatrix != state.modelViewMatrix;
 	bool pmatrixchanged = shaderchanged || projectionMatrix != state.projectionMatrix;
-	bool stwmatrixchanged = shaderchanged || screenToWindowMatrix != state.screenToWindowMatrix;
 
 	if (shader != NULL)
 	{
@@ -252,9 +251,6 @@ void Context::setupRender()
 			shader->sendMatrix("ModelViewProjectionMatrix", 4, mvpMatrix.getElements(), 1);
 		}
 
-		if (stwmatrixchanged && shader->hasUniform("ScreenToWindowMatrix"))
-			shader->sendMatrix("ScreenToWindowMatrix", 4, screenToWindowMatrix.getElements(), 1);
-
 		// TODO: normal matrix
 		// "transpose of the inverse of the upper leftmost 3x3 of the Model-View Matrix"
 	}
@@ -264,9 +260,6 @@ void Context::setupRender()
 
 	if (pmatrixchanged)
 		state.projectionMatrix = projectionMatrix;
-
-	if (stwmatrixchanged)
-		state.screenToWindowMatrix = screenToWindowMatrix;
 
 	state.lastUsedShader = shader;
 }
@@ -390,6 +383,11 @@ void Context::pushViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 }
 
 void Context::popViewport() {
+	if (viewportStack.size() == 1) {
+		fprintf(stderr, "popViewport: Trying to pop stack with size==1!\n");
+		return;
+	}
+
 	viewportStack.pop_back();
 	const Viewport& v = getViewport();
 	glViewport(v.x, v.y, v.width, v.height);
@@ -729,11 +727,6 @@ graphics::Image::Wrap Context::getTextureWrap() const
 	}
 
 	return w;
-}
-
-void Context::setScreenToWindowMatrix(const Matrix& m)
-{
-	screenToWindowMatrix = m;
 }
 
 } // gles2
