@@ -54,8 +54,12 @@ function onDrop(e) {
     listenerEl.addEventListener('load', onLoad, true);
     listenerEl.addEventListener('message', onMessage, true);
 
+    // Get the manifest to find the correct nmf to use.
+    var manifest = chrome.runtime.getManifest();
+    var nmf = manifest.nacl_modules[0].path;
+
     var embedEl = document.createElement('embed');
-    embedEl.setAttribute('src', 'love_release.nmf');
+    embedEl.setAttribute('src', nmf);
     embedEl.setAttribute('type', 'application/x-nacl');
     embedEl.setAttribute('love_src', url);
     embedEl.setAttribute('width', '100%');
