@@ -13,7 +13,6 @@ body.loading {
   position: absolute;
   right: 0;
   top: 0;
-  -webkit-flex-direction: row;
 }
 #dropTarget {
   background-color: #fff;
@@ -34,4 +33,5 @@ body.loading {
 }
 embed {
   margin: auto;
+  -webkit-flex: none;
 }
