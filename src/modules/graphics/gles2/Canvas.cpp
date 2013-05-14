@@ -202,8 +202,6 @@ namespace gles2
 
 	Image::Filter Canvas::getFilter() const
 	{
-		GLint gmin, gmag;
-
 		Context *ctx = getContext();
 		ctx->bindTexture(img);
                 return ctx->getTextureFilter();

@@ -354,7 +354,7 @@ namespace love
 	{
 		// Convert to absolute index if necessary.
 		if (idx < 0 && idx > LUA_REGISTRYINDEX)
-			idx = lua_gettop(L) + ++idx;
+			idx = lua_gettop(L) + idx + 1;
 
 		lua_getfield(L, idx, k);
 

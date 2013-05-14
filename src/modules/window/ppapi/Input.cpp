@@ -67,6 +67,8 @@ bool ConvertEvent(const pp::InputEvent& in_event, InputEvent* out_event) {
     case PP_INPUTEVENT_TYPE_CHAR:
       type = INPUT_CHARACTER;
       break;
+    default:
+      return false;
   }
 
   out_event->type = type;

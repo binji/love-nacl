@@ -144,9 +144,7 @@ namespace box2d
 		{
 			for (int i = 0, j = vcount-1; i < j; ++i, --j)
 			{
-				b2Vec2 swap = vecs[i];
-				vecs[i] = vecs[j];
-				vecs[j] = swap;
+				std::swap(vecs[i], vecs[j]);
 			}
 		}
 

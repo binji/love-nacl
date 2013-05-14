@@ -1,7 +1,7 @@
 DATA_DIR?=out/chromium-data-dir
 CHROME_PATH?=/home/binji/dev/chromium/src/out/Release/chrome
 CHROME_ARGS?=--user-data-dir=${DATA_DIR} --enable-nacl ${CHROME_EXTRA_ARGS}
-NACL_SDK_ROOT?=/home/binji/dev/chromium/src/out/pepper_28
+NACL_SDK_ROOT?=/home/binji/dev/chromium/src/out/pepper_29
 NINJA_WRAP=build/ninja-wrap/ninja_wrap.py
 
 all: build.ninja

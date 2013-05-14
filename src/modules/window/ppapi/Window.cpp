@@ -27,11 +27,11 @@ namespace ppapi
 extern pp::Instance* g_Instance;
 
 	Window::Window()
-		: created(false),
-		  fullscreen(g_Instance),
+		: fullscreen(g_Instance),
 		  graphics3d(NULL),
 		  width(0),
 		  height(0),
+		  created(false),
 		  focused(false)
 	{
 	}

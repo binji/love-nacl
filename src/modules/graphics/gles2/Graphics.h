@@ -107,7 +107,7 @@ namespace gles2
 
 		LineStyle lineStyle;
 		float lineWidth;
-		GLint matrixLimit;
+		GLuint matrixLimit;
 		GLint userMatrices;
 
 		int getRenderWidth();

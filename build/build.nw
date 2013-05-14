@@ -65,51 +65,6 @@ LOVE_SOURCES = [
   'src/common/Variant.cpp',
   'src/common/Vector.cpp',
   'src/common/wrap_Data.cpp',
-  'src/libraries/Box2D/Collision/b2BroadPhase.cpp',
-  'src/libraries/Box2D/Collision/b2CollideCircle.cpp',
-  'src/libraries/Box2D/Collision/b2CollideEdge.cpp',
-  'src/libraries/Box2D/Collision/b2CollidePolygon.cpp',
-  'src/libraries/Box2D/Collision/b2Collision.cpp',
-  'src/libraries/Box2D/Collision/b2Distance.cpp',
-  'src/libraries/Box2D/Collision/b2DynamicTree.cpp',
-  'src/libraries/Box2D/Collision/b2TimeOfImpact.cpp',
-  'src/libraries/Box2D/Collision/Shapes/b2ChainShape.cpp',
-  'src/libraries/Box2D/Collision/Shapes/b2CircleShape.cpp',
-  'src/libraries/Box2D/Collision/Shapes/b2EdgeShape.cpp',
-  'src/libraries/Box2D/Collision/Shapes/b2PolygonShape.cpp',
-  'src/libraries/Box2D/Common/b2BlockAllocator.cpp',
-  'src/libraries/Box2D/Common/b2Draw.cpp',
-  'src/libraries/Box2D/Common/b2Math.cpp',
-  'src/libraries/Box2D/Common/b2Settings.cpp',
-  'src/libraries/Box2D/Common/b2StackAllocator.cpp',
-  'src/libraries/Box2D/Common/b2Timer.cpp',
-  'src/libraries/Box2D/Dynamics/b2Body.cpp',
-  'src/libraries/Box2D/Dynamics/b2ContactManager.cpp',
-  'src/libraries/Box2D/Dynamics/b2Fixture.cpp',
-  'src/libraries/Box2D/Dynamics/b2Island.cpp',
-  'src/libraries/Box2D/Dynamics/b2WorldCallbacks.cpp',
-  'src/libraries/Box2D/Dynamics/b2World.cpp',
-  'src/libraries/Box2D/Dynamics/Contacts/b2ChainAndCircleContact.cpp',
-  'src/libraries/Box2D/Dynamics/Contacts/b2ChainAndPolygonContact.cpp',
-  'src/libraries/Box2D/Dynamics/Contacts/b2CircleContact.cpp',
-  'src/libraries/Box2D/Dynamics/Contacts/b2Contact.cpp',
-  'src/libraries/Box2D/Dynamics/Contacts/b2ContactSolver.cpp',
-  'src/libraries/Box2D/Dynamics/Contacts/b2EdgeAndCircleContact.cpp',
-  'src/libraries/Box2D/Dynamics/Contacts/b2EdgeAndPolygonContact.cpp',
-  'src/libraries/Box2D/Dynamics/Contacts/b2PolygonAndCircleContact.cpp',
-  'src/libraries/Box2D/Dynamics/Contacts/b2PolygonContact.cpp',
-  'src/libraries/Box2D/Dynamics/Joints/b2DistanceJoint.cpp',
-  'src/libraries/Box2D/Dynamics/Joints/b2FrictionJoint.cpp',
-  'src/libraries/Box2D/Dynamics/Joints/b2GearJoint.cpp',
-  'src/libraries/Box2D/Dynamics/Joints/b2Joint.cpp',
-  'src/libraries/Box2D/Dynamics/Joints/b2MouseJoint.cpp',
-  'src/libraries/Box2D/Dynamics/Joints/b2PrismaticJoint.cpp',
-  'src/libraries/Box2D/Dynamics/Joints/b2PulleyJoint.cpp',
-  'src/libraries/Box2D/Dynamics/Joints/b2RevoluteJoint.cpp',
-  'src/libraries/Box2D/Dynamics/Joints/b2RopeJoint.cpp',
-  'src/libraries/Box2D/Dynamics/Joints/b2WeldJoint.cpp',
-  'src/libraries/Box2D/Dynamics/Joints/b2WheelJoint.cpp',
-  'src/libraries/Box2D/Rope/b2Rope.cpp',
   'src/libraries/luasocket/luasocket.cpp',
 #  'src/libraries/luasocket/libluasocket/usocket.c',
 #  'src/libraries/luasocket/libluasocket/unix.c',
@@ -257,6 +212,54 @@ LOVE_SOURCES = [
   'src/modules/window/Window.cpp',
 ]
 
+BOX2D_SOURCES = [
+  'src/libraries/Box2D/Collision/b2BroadPhase.cpp',
+  'src/libraries/Box2D/Collision/b2CollideCircle.cpp',
+  'src/libraries/Box2D/Collision/b2CollideEdge.cpp',
+  'src/libraries/Box2D/Collision/b2CollidePolygon.cpp',
+  'src/libraries/Box2D/Collision/b2Collision.cpp',
+  'src/libraries/Box2D/Collision/b2Distance.cpp',
+  'src/libraries/Box2D/Collision/b2DynamicTree.cpp',
+  'src/libraries/Box2D/Collision/b2TimeOfImpact.cpp',
+  'src/libraries/Box2D/Collision/Shapes/b2ChainShape.cpp',
+  'src/libraries/Box2D/Collision/Shapes/b2CircleShape.cpp',
+  'src/libraries/Box2D/Collision/Shapes/b2EdgeShape.cpp',
+  'src/libraries/Box2D/Collision/Shapes/b2PolygonShape.cpp',
+  'src/libraries/Box2D/Common/b2BlockAllocator.cpp',
+  'src/libraries/Box2D/Common/b2Draw.cpp',
+  'src/libraries/Box2D/Common/b2Math.cpp',
+  'src/libraries/Box2D/Common/b2Settings.cpp',
+  'src/libraries/Box2D/Common/b2StackAllocator.cpp',
+  'src/libraries/Box2D/Common/b2Timer.cpp',
+  'src/libraries/Box2D/Dynamics/b2Body.cpp',
+  'src/libraries/Box2D/Dynamics/b2ContactManager.cpp',
+  'src/libraries/Box2D/Dynamics/b2Fixture.cpp',
+  'src/libraries/Box2D/Dynamics/b2Island.cpp',
+  'src/libraries/Box2D/Dynamics/b2WorldCallbacks.cpp',
+  'src/libraries/Box2D/Dynamics/b2World.cpp',
+  'src/libraries/Box2D/Dynamics/Contacts/b2ChainAndCircleContact.cpp',
+  'src/libraries/Box2D/Dynamics/Contacts/b2ChainAndPolygonContact.cpp',
+  'src/libraries/Box2D/Dynamics/Contacts/b2CircleContact.cpp',
+  'src/libraries/Box2D/Dynamics/Contacts/b2Contact.cpp',
+  'src/libraries/Box2D/Dynamics/Contacts/b2ContactSolver.cpp',
+  'src/libraries/Box2D/Dynamics/Contacts/b2EdgeAndCircleContact.cpp',
+  'src/libraries/Box2D/Dynamics/Contacts/b2EdgeAndPolygonContact.cpp',
+  'src/libraries/Box2D/Dynamics/Contacts/b2PolygonAndCircleContact.cpp',
+  'src/libraries/Box2D/Dynamics/Contacts/b2PolygonContact.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2DistanceJoint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2FrictionJoint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2GearJoint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2Joint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2MouseJoint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2PrismaticJoint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2PulleyJoint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2RevoluteJoint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2RopeJoint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2WeldJoint.cpp',
+  'src/libraries/Box2D/Dynamics/Joints/b2WheelJoint.cpp',
+  'src/libraries/Box2D/Rope/b2Rope.cpp',
+]
+
 LOVE_INCLUDE_DIRS = [
   'src',
   'src/modules',
@@ -264,6 +267,11 @@ LOVE_INCLUDE_DIRS = [
   '$nacl_sdk_root/include',
   'third_party/include',
   'third_party/include/SDL',
+]
+
+BOX2D_INCLUDE_DIRS = [
+  'src',
+  'src/libraries'
 ]
 
 LOVE_DEFINES = [
@@ -303,12 +311,19 @@ LOVE_LIBS = [
 for b in sources.ForEach(name='love', inf=LOVE_SOURCES, **arch_config):
   b.Set('ccflags', Prefix('-I', LOVE_INCLUDE_DIRS))
   b.Append('ccflags', Prefix('-D', LOVE_DEFINES))
+  b.Append('ccflags', '-Wall -Werror -Wno-switch -Wno-unused-variable')
   b.Append('order_only', Select('makelua').outputs)
 
+for b in sources.ForEach(name='box2d', inf=BOX2D_SOURCES, **arch_config):
+  b.Set('ccflags', Prefix('-I', BOX2D_INCLUDE_DIRS))
+  # Don't turn on -Wall for Box2d -- too many warnings :-/
+
 for b in exe.ForEach(name='love', **arch_config):
+  subkeys = b.SubKeys('arch', 'config')
   b.Set('ldflags', Prefix('-L', LOVE_LIB_DIRS))
   b.Set('ldflags', Prefix('-l', LOVE_LIBS))
-  b.Set('inputs', Select('love-sources').And(keys=b.keys).outputs)
+  b.Set('inputs',
+        Select('love-sources', 'box2d-sources').And(keys=subkeys).outputs)
 
 for b in nmf.ForEach(name='love', config=CONFIGS):
   b.Append('inputs',

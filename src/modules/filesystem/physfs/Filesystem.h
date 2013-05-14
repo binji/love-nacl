@@ -58,6 +58,7 @@
 #	elif defined(LOVE_LINUX)
 #		define LOVE_APPDATA_FOLDER "love"
 #	else
+#               undef LOVE_APPDATA_PREFIX
 #		define LOVE_APPDATA_PREFIX "."
 #		define LOVE_APPDATA_FOLDER "love"
 #	endif

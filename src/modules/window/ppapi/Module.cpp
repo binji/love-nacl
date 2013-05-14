@@ -58,9 +58,9 @@ class Instance : public pp::Instance {
 
 Instance::Instance(PP_Instance instance)
     : pp::Instance(instance),
-      buffer_(new char[READ_BUFFER_SIZE]),
       url_request_(this),
-      url_loader_(this) {
+      url_loader_(this),
+      buffer_(new char[READ_BUFFER_SIZE]) {
   PPB_GetInterface get_browser_interface =
       pp::Module::Get()->get_browser_interface();
   glInitializePPAPI(get_browser_interface);
@@ -103,6 +103,7 @@ bool Instance::Init(uint32_t argc, const char* argn[], const char* argv[]) {
 //        "type=PERSISTENT,expected_size=1048576");
 
   pthread_create(&main_loop_thread_, NULL, MainLoop, this);
+  return true;
 }
 
 void Instance::DidChangeView(const pp::View& view) {
@@ -138,6 +139,7 @@ void* Instance::MainLoop(void* param) {
   instance->PostMessage("OK");
 
   love_main(args.size(), const_cast<char**>(args.data()));
+  return NULL;
 }
 
 void Instance::Download() {
@@ -178,7 +180,7 @@ void Instance::Download() {
     }
 
     size_t bytes_written = fwrite(&buffer_[0], 1, result, outf);
-    if (bytes_written != result) {
+    if (bytes_written != static_cast<size_t>(result)) {
       fprintf(stderr, "Error writing to output file\n");
       goto done;
     }
