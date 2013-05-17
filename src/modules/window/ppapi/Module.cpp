@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #include <string>
 #include <vector>
@@ -42,7 +43,10 @@ class Instance : public pp::Instance {
   virtual bool Init(uint32_t argc, const char* argn[], const char* argv[]);
   virtual void DidChangeView(const pp::View& view);
   virtual void DidChangeFocus(bool has_focus);
+  virtual bool HandleDocumentLoad(const pp::URLLoader& url_loader);
   virtual bool HandleInputEvent(const pp::InputEvent& event);
+
+  void PostMessagef(const char* format, ...);
 
  private:
   static void* MainLoop(void*);
@@ -58,8 +62,6 @@ class Instance : public pp::Instance {
 
 Instance::Instance(PP_Instance instance)
     : pp::Instance(instance),
-      url_request_(this),
-      url_loader_(this),
       buffer_(new char[READ_BUFFER_SIZE]) {
   PPB_GetInterface get_browser_interface =
       pp::Module::Get()->get_browser_interface();
@@ -84,16 +86,21 @@ bool Instance::Init(uint32_t argc, const char* argn[], const char* argv[]) {
   std::string love_src;
   for (uint32_t i = 0; i < argc; ++i) {
     if (!strcmp(argn[i], "love_src")) {
-      src = argv[i];
-      printf("Found love_src: %s\n", src.c_str());
+      love_src = argv[i];
+      printf("Found love_src: %s\n", love_src.c_str());
     } else if (!strcmp(argn[i], "src")) {
       src = argv[i];
       printf("Found src: %s\n", src.c_str());
     }
   }
 
-  if (!love_src.empty())
+  if (!love_src.empty()) {
+    // Loading via dropped file, etc. Start MainLoop immediately.
     src = love_src;
+    pthread_create(&main_loop_thread_, NULL, MainLoop, this);
+  } else {
+    // Loading using HandleDocumentLoad, wait for call before starting MainLoop.
+  }
 
   url_ = src;
 
@@ -101,8 +108,6 @@ bool Instance::Init(uint32_t argc, const char* argn[], const char* argv[]) {
   // TODO(binji): figure out how to make this work...
 //  mount("", "/persistent", "html5fs", 0,
 //        "type=PERSISTENT,expected_size=1048576");
-
-  pthread_create(&main_loop_thread_, NULL, MainLoop, this);
   return true;
 }
 
@@ -113,9 +118,25 @@ void Instance::DidChangeFocus(bool has_focus) {
   EnqueueFocusEvent(has_focus);
 }
 
+bool Instance::HandleDocumentLoad(const pp::URLLoader& url_loader) {
+  url_loader_ = url_loader;
+  pthread_create(&main_loop_thread_, NULL, MainLoop, this);
+  return true;
+}
+
 bool Instance::HandleInputEvent(const pp::InputEvent& event) {
   EnqueueEvent(event);
   return true;
+}
+
+void Instance::PostMessagef(const char* format, ...) {
+  const size_t kBufferSize = 1024;
+  char buffer[kBufferSize];
+  va_list args;
+  va_start(args, format);
+  vsnprintf(&buffer[0], kBufferSize, format, args);
+
+  PostMessage(buffer);
 }
 
 void* Instance::MainLoop(void* param) {
@@ -144,14 +165,19 @@ void* Instance::MainLoop(void* param) {
 
 void Instance::Download() {
   int32_t result;
-  url_request_.SetURL(url_.c_str());
-  url_request_.SetMethod("GET");
-  url_request_.SetRecordDownloadProgress(true);
-  result = url_loader_.Open(url_request_, pp::CompletionCallback());
-  if (result != PP_OK) {
-    fprintf(stderr, "Cannot read from URL %s. Error %d\n", url_.c_str(),
-            result);
-    return;
+  if (url_loader_.is_null()) {
+    printf("Download: url_loader_ is null?\n");
+    url_request_ = pp::URLRequestInfo(this);
+    url_request_.SetURL(url_.c_str());
+    url_request_.SetMethod("GET");
+    url_request_.SetRecordDownloadProgress(true);
+    url_loader_ = pp::URLLoader(this);
+    result = url_loader_.Open(url_request_, pp::CompletionCallback());
+    if (result != PP_OK) {
+      fprintf(stderr, "Cannot read from URL %s. Error %d\n", url_.c_str(),
+              result);
+      return;
+    }
   }
 
   int64_t total_received = 0;
@@ -166,7 +192,9 @@ void Instance::Download() {
 
   while (1) {
     if (url_loader_.GetDownloadProgress(&total_received, &total_bytes)) {
-      printf("Downloading... %d of %d\n", total_received, total_bytes);
+      PostMessagef("download:%lld,%lld", total_received, total_bytes);
+    } else {
+      PostMessagef("download:%lld,0", total_written);
     }
 
     result = url_loader_.ReadResponseBody(&buffer_[0], READ_BUFFER_SIZE,
@@ -192,6 +220,7 @@ void Instance::Download() {
 
 done:
   fclose(outf);
+  url_loader_ = pp::URLLoader();
   return;
 }
 

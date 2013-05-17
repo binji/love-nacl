@@ -97,6 +97,10 @@ function runTryModule(cb, attrs) {
     if (typeof e.data !== 'string') {
       return cleanUpAndCallback(false, 'Received bad message...?');
     }
+    if (e.data.lastIndexOf('download', 0) === 0) {
+      // Ignore download messages.
+      return;
+    }
     if (e.data !== 'OK') {
       return cleanUpAndCallback(false, 'Received incorrect message...?');
     }
@@ -152,6 +156,7 @@ function runTryWebGL(cb) {
 function runTryLoveliness(cb) {
   runTryModule(cb, {
     src: 'love_release.nmf',
+    love_src: 'bogus',
     width: '800px',
     height: '600px',
   });
