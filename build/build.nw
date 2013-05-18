@@ -371,12 +371,15 @@ for b in nmf.ForEach(name='test', config=CONFIGS):
 LOVE_DATA_FILES = [
   'background.js',
   'bootstrap.min.css',
+  'context_menu.html',
+  'context_menu.js',
+  'drop.css',
+  'drop.html',
+  'drop.js',
   'icon128.png',
   'icon16.png',
   'icon48.png',
-  'index.css',
-  'index.html',
-  'index.js',
+  'injected.js',
   'inject.js',
   'nyu19_on.png',
   'nyu19.png',
@@ -396,7 +399,7 @@ for b in data.ForEach(name='love', inf=LOVE_DATA_FILES):
 # Manifest files
 #
 Rule('manifest',
-     'script/generate_manifest.py -o $out -c $config -t $in $resources',
+     'script/generate_manifest.py -o $out -c $config -t $in $resources $key',
      'MANIFEST $out',
      implicit='script/generate_manifest.py')
 
@@ -405,9 +408,12 @@ def GenerateManifest(out, config):
   resources = Select('love-exe').And(keys=config_keys).outputs
   resources += Select('love-nmf').And(keys=config_keys).outputs
   resources = [Filename(n).Base for n in resources]
+  use_key = ''
+  if config == 'debug':
+    use_key = '-k'
 
   return Build(out, 'manifest', 'data/manifest.json.template',
-        config=config, resources=resources)
+        config=config, resources=resources, key=use_key)
 
 GenerateManifest('out/manifest.json', 'debug')
 GenerateManifest('out/package/manifest.json', 'release').Tag('package')

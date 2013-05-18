@@ -12,6 +12,7 @@ def main(args):
   parser.add_option('-o', dest='out')
   parser.add_option('-c', '--config')
   parser.add_option('-t', '--template')
+  parser.add_option('-k', '--key', action='store_true')
   options, args = parser.parse_args(args)
 
   if not options.out:
@@ -25,6 +26,7 @@ def main(args):
     'config': options.config,
     'resources': args
   }
+  template_dict['key'] = options.key
   easy_template.RunTemplateFile(options.template, options.out, template_dict)
   return 0
 
