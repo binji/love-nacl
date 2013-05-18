@@ -84,11 +84,41 @@ chrome.runtime.onInstalled.addListener(function (details) {
 
 // Cool trick to modify auto-generated embed page:
 // See https://groups.google.com/d/msg/native-client-discuss/UJu7VXvV_bw/pLc19D50gbwJ
+
 function injectScript(tab) {
+  // This is a minimal script that only checks to see if we should be
+  // injecting more.
   chrome.tabs.executeScript(tab.id, {
     file: 'inject.js',
     runAt: 'document_start'
   });
 }
-chrome.tabs.onCreated.addListener(injectScript);
-chrome.tabs.onUpdated.addListener(injectScript);
+
+chrome.tabs.onCreated.addListener(function (tab) {
+  injectScript(tab);
+});
+chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+  injectScript(tab);
+});
+
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+  if (message === 'injected') {
+    // If the tab sent us a response, it must be a NaCl mimetype handler page.
+    // Inject the full script to resize the embed, etc...
+    chrome.tabs.executeScript(sender.tab.id, {
+      file: 'injected.js',
+      runAt: 'document_start'
+    });
+  }
+});
+
+// Add context menu, too.
+chrome.contextMenus.create({
+  title: 'Open with LÖVELINESS',
+  contexts: ['link'],
+  onclick: function (info, tab) {
+    chrome.tabs.create({url: 'context_menu.html'}, function (tab) {
+      chrome.tabs.sendMessage(tab.id, info.linkUrl);
+    });
+  }
+});

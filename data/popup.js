@@ -24,7 +24,8 @@ function onTestClicked(e) {
 }
 
 function onLoadFileClicked(e) {
-  chrome.tabs.create({url: 'index.html'});
+  // Load drag and drop page.
+  chrome.tabs.create({url: 'drop.html'});
   window.close();
 }
 
