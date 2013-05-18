@@ -30,7 +30,7 @@ Rule('cc', '$cc $ccflags -MMD -MF $out.d -c $in -o $out', 'CC $out',
 Rule('ar', '$ar rc $out $in', 'AR $out')
 Rule('link', '$cc $in $ldflags -o $out', 'LINK $out')
 Rule('nmf', '$nmf $in -o $out', 'NMF $out')
-Rule('zip', 'zip $out -j $in', 'ZIP $out')
+Rule('zip', 'rm -f $out && zip -9 $out -j $in', 'ZIP $out')
 Rule('strip', '$strip $in -o $out', 'STRIP $out')
 
 sources = Build('out/{arch}/{config}/{inf:-ext}.o', 'cc', '{inf}') \
@@ -206,6 +206,7 @@ LOVE_SOURCES = [
   'src/modules/thread/wrap_Thread.cpp',
   'src/modules/timer/sdl/Timer.cpp',
   'src/modules/timer/wrap_Timer.cpp',
+  'src/modules/window/ppapi/FilesystemHack.cc',
   'src/modules/window/ppapi/Input.cpp',
   'src/modules/window/ppapi/Module.cpp',
   'src/modules/window/ppapi/Window.cpp',
@@ -376,6 +377,7 @@ LOVE_DATA_FILES = [
   'drop.css',
   'drop.html',
   'drop.js',
+  'filesystem.js',
   'icon128.png',
   'icon16.png',
   'icon48.png',
@@ -408,6 +410,7 @@ def GenerateManifest(out, config):
   resources = Select('love-exe').And(keys=config_keys).outputs
   resources += Select('love-nmf').And(keys=config_keys).outputs
   resources = [Filename(n).Base for n in resources]
+  resources.append('filesystem.js')
   use_key = ''
   if config == 'debug':
     use_key = '-k'

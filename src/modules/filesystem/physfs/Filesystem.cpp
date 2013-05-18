@@ -27,6 +27,9 @@
 
 #include "Filesystem.h"
 
+// HACK(binji)
+#include "window/ppapi/FilesystemHack.h"
+
 namespace love
 {
 namespace filesystem
@@ -288,6 +291,10 @@ namespace physfs
 
 		if (!PHYSFS_mkdir(file))
 			return false;
+                // HACK(binji)
+		using namespace love::window::ppapi;
+		if (!MakeDirectory(PHYSFS_getWriteDir(), file))
+			return false;
 		return true;
 	}
 
@@ -297,6 +304,10 @@ namespace physfs
 			return false;
 
 		if (!PHYSFS_delete(file))
+			return false;
+                // HACK(binji)
+		using namespace love::window::ppapi;
+		if (!RemoveFile(PHYSFS_getWriteDir(), file))
 			return false;
 		return true;
 	}
