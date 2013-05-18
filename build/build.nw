@@ -30,7 +30,7 @@ Rule('cc', '$cc $ccflags -MMD -MF $out.d -c $in -o $out', 'CC $out',
 Rule('ar', '$ar rc $out $in', 'AR $out')
 Rule('link', '$cc $in $ldflags -o $out', 'LINK $out')
 Rule('nmf', '$nmf $in -o $out', 'NMF $out')
-Rule('zip', 'zip $out -j $in', 'ZIP $out')
+Rule('zip', 'rm -f $out && zip -9 $out -j $in', 'ZIP $out')
 Rule('strip', '$strip $in -o $out', 'STRIP $out')
 
 sources = Build('out/{arch}/{config}/{inf:-ext}.o', 'cc', '{inf}') \
