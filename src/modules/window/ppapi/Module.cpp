@@ -276,6 +276,7 @@ void Instance::MainLoop_Run(int32_t) {
   args.push_back("/");
   args.push_back("/temporary/game.love");
   love_main(args.size(), const_cast<char**>(args.data()));
+  PostMessage("bye");
 }
 
 void Instance::Filesystem_AllowAccess(int32_t, bool allowed) {

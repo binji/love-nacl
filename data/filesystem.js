@@ -2,9 +2,27 @@
 
 var fileSystemSize = 5 * 1024 * 1024;  // 5M should be enough for anybody.
 var messageMap = {
+  // HACK(binji):  these messages aren't filesystem related. Probably should
+  // rename this file...
+  'back': onMessageBack,
+  'close': onMessageClose,
+  'reload': onMessageReload,
+
   'getFiles': onMessageGetFiles,
   'queryFileSystem': onMessageQueryFilesystem,
   'requestFileSystem': onMessageRequestFileSystem,
+}
+
+function onMessageBack(data, response) {
+  window.history.back();
+}
+
+function onMessageClose(data, response) {
+  window.close();
+}
+
+function onMessageReload(data, response) {
+  window.location.reload();
 }
 
 function onMessageGetFiles(data, response) {
