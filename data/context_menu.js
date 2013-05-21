@@ -20,9 +20,17 @@ function createModule(url) {
   document.head.appendChild(scriptEl);
 }
 
-// The context menu event sends the URL to load after the tab is created.
-function onChromeMessage(message, sender, sendResponse) {
-  var url = message;
-  createModule(url);
+function getQueryParameters() {
+  var result = {};
+  var kvps = window.location.search.substr(1).split('&');
+  for (var i = 0; i < kvps.length; ++i) {
+    var kvp = kvps[i].split('=');
+    result[decodeURIComponent(kvp[0])] = decodeURIComponent(kvp[1]);
+  }
+  return result;
 }
-chrome.runtime.onMessage.addListener(onChromeMessage);
+
+document.addEventListener('DOMContentLoaded', function () {
+  var queryParams = getQueryParameters();
+  createModule(queryParams.url);
+});

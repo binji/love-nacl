@@ -117,8 +117,8 @@ chrome.contextMenus.create({
   title: 'Open with LÖVELINESS',
   contexts: ['link'],
   onclick: function (info, tab) {
-    chrome.tabs.create({url: 'context_menu.html'}, function (tab) {
-      chrome.tabs.sendMessage(tab.id, info.linkUrl);
+    chrome.tabs.create({
+      url: 'context_menu.html?url='+encodeURIComponent(info.linkUrl)
     });
   }
 });
