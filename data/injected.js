@@ -1,3 +1,5 @@
+(function () {
+
 var bodyEl = document.body;
 var embedEl = document.embeds[0];
 var parentEl = embedEl.parentElement;
@@ -6,6 +8,40 @@ var startTimeMs = Date.now();
 var timeTillMessageMs = 1000;  // 1 second.
 
 bodyEl.style.backgroundColor = '#000';
+
+
+var windowMessages = (function() {
+  var nextId = 0;
+  var callbacks = {};
+
+  function onWindowMessage(e) {
+    if (e.source !== window)
+      return;
+
+    if (e.data.cmd !== 'response')
+      return;
+
+    var callback = callbacks[e.data.id];
+    if (callback) {
+      callback(e.data.data);
+      if (e.data.finished)
+        delete callbacks[e.data.id];
+    }
+  }
+
+  function post(cmd, data, callback) {
+    var id = nextId++;
+    callbacks[id] = callback;
+    window.postMessage({cmd: cmd, id: id, data: data}, '*');
+  }
+
+  window.addEventListener('message', onWindowMessage);
+
+  return {
+    post: post,
+  };
+})();
+
 
 function onWindowResize(e) {
   var embedWidth = embedEl.clientWidth;
@@ -70,15 +106,15 @@ function setMessage(message) {
   console.log(message);
 }
 
-function onLoadStart(e) {
+function onModuleLoadStart(e) {
   setMessage('loading nexe...');
 }
 
-function onLoad(e) {
+function onModuleLoad(e) {
   setMessage('loading nexe 100%');
 }
 
-function onProgress(e) {
+function onModuleProgress(e) {
   if (e.lengthComputable) {
     setMessage('loading nexe '+(e.loaded / e.total * 100).toFixed(0)+'%');
   } else {
@@ -86,11 +122,11 @@ function onProgress(e) {
   }
 }
 
-function onError(e) {
+function onModuleError(e) {
   setMessage('error. :( "'+embedEl.lastError+'"');
 }
 
-function onCrash(e) {
+function onModuleCrash(e) {
   setMessage('crash. :(');
 }
 
@@ -133,54 +169,103 @@ function onMessageOK() {
     if (messageEl)
       parentEl.removeChild(messageEl);
     messageEl = undefined;
-    console.log('OK!');
   }
 
-  setMessage('done!');
-  setTimeout(afterPause, 200);
+  function notifyModule() {
+    embedEl.postMessage('run');
+    setMessage('done!');
+    setTimeout(afterPause, 200);
+  }
+
+  function onGetFiles(data) {
+    if (data.done) {
+      // Done!
+      notifyModule();
+    } else {
+      if (data.type === 'file') {
+        embedEl.postMessage('copyFile:'+data.path);
+      } else if (data.type === 'dir') {
+        embedEl.postMessage('makeDir:'+data.path);
+      }
+    }
+  }
+
+  function onQueryFileSystem(data) {
+    if (data.ok) {
+      // Persistent storage. Request filenames...
+      embedEl.postMessage('fileSystemAccess:yes');
+      windowMessages.post('getFiles', {}, onGetFiles);
+    } else {
+      // No persistent storage, so just run!
+      notifyModule();
+    }
+  }
+
+  // HACK(binji): Check filesystem to see if files need to be copied...
+  setMessage('checking filesystem...');
+  windowMessages.post('queryFileSystem', {}, onQueryFileSystem);
+}
+
+function onMessageRequestFileSystem() {
+  function onRequestFileSystem(data) {
+    var ok = data.ok ? 'yes' : 'no';
+    embedEl.postMessage('fileSystemAccess:'+ok);
+  }
+
+  windowMessages.post('requestFileSystem', {}, onRequestFileSystem);
 }
 
 var messageMap = {
   'setWindow': onMessageSetWindow,
   'download': onMessageDownload,
   'OK': onMessageOK,
+  'requestFileSystem': onMessageRequestFileSystem,
 };
 
-function onMessage(e) {
+function onModuleMessage(e) {
   if (typeof e.data !== 'string')
     return;
 
   var msg = e.data;
-  console.log('got message: '+msg);
-  for (var key in messageMap) {
-    if (messageMap.hasOwnProperty(key)) {
-      if (msg.lastIndexOf(key, 0) === 0) {
-        // Extract values.
-        var values = msg.split(':')[1];
-        var numValues;
-        if (values) {
-          values = values.split(',');
-          numValues = values.length;
-        } else {
-          numValues = 0;
-        }
-
-        var func = messageMap[key];
-        if (numValues === func.length)
-          func.apply(null, values);
-        break;
-      }
+  console.log('got module message: '+msg);
+  var parts = msg.split(':');
+  var cmd = parts[0];
+  var values = parts[1] ? parts[1].split(',') : [];
+  var func = messageMap[cmd];
+  if (func) {
+    if (values.length === func.length) {
+      func.apply(null, values);
+    } else {
+      console.log('Expected '+func.length+' arguments to module command "'+
+          cmd+'", Got '+values.length+'.');
     }
+  } else {
+    console.log('Unknown module command: '+cmd);
   }
+}
+
+function injectExtensionScript(name) {
+  // Inject filesystem script to access filesystem API.  Idea copied from
+  // http://stackoverflow.com/questions/9515704/building-a-chrome-extension-inject-code-in-a-page-using-a-content-script/9517879#9517879
+  var scriptEl = document.createElement('script');
+  scriptEl.src = 'chrome-extension://mompnkcmpbopandjnddeecgeeojegohc/' + name;
+  scriptEl.addEventListener('load', function () {
+    this.parentNode.removeChild(this);
+  });
+  document.documentElement.appendChild(scriptEl);
 }
 
 embedEl.style.maxHeight = '0';
 
-parentEl.addEventListener('loadstart', onLoadStart, true);
-parentEl.addEventListener('progress', onProgress, true);
-parentEl.addEventListener('load', onLoad, true);
-parentEl.addEventListener('crash', onCrash, true);
-parentEl.addEventListener('error', onError, true);
-parentEl.addEventListener('message', onMessage, true);
+parentEl.addEventListener('loadstart', onModuleLoadStart, true);
+parentEl.addEventListener('progress', onModuleProgress, true);
+parentEl.addEventListener('load', onModuleLoad, true);
+parentEl.addEventListener('crash', onModuleCrash, true);
+parentEl.addEventListener('error', onModuleError, true);
+parentEl.addEventListener('message', onModuleMessage, true);
 
 window.addEventListener('resize', debounce(onWindowResize, 100));
+
+injectExtensionScript('filesystem.js');
+
+})();

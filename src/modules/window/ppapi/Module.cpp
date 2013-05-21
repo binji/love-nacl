@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <fcntl.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -18,10 +17,14 @@
 #include <ppapi/cpp/module.h>
 #include <ppapi/cpp/url_loader.h>
 #include <ppapi/cpp/url_request_info.h>
+#include <ppapi/cpp/var.h>
 #include <ppapi/lib/gl/gles2/gl2ext_ppapi.h>
+#include <ppapi/utility/completion_callback_factory.h>
+#include <ppapi/utility/threading/simple_thread.h>
 
 #include <window/Window.h>
 #include <window/ppapi/Window.h>
+#include "FilesystemHack.h"
 #include "Input.h"
 
 #define READ_BUFFER_SIZE (128 * 1024)
@@ -45,24 +48,35 @@ class Instance : public pp::Instance {
   virtual void DidChangeFocus(bool has_focus);
   virtual bool HandleDocumentLoad(const pp::URLLoader& url_loader);
   virtual bool HandleInputEvent(const pp::InputEvent& event);
+  virtual void HandleMessage(const pp::Var& message);
 
   void PostMessagef(const char* format, ...);
 
  private:
-  static void* MainLoop(void*);
-  void Download();
+  void MainLoop_Initialize(int32_t);
+  void MainLoop_Download();
+  void MainLoop_Run(int32_t);
+  void Filesystem_AllowAccess(int32_t, bool allowed);
+  void Filesystem_CopyFile(int32_t, const std::string& path);
+  void Filesystem_MakeDir(int32_t, const std::string& path);
 
-  pthread_t main_loop_thread_;
   std::string url_;
 
   pp::URLRequestInfo url_request_;
   pp::URLLoader url_loader_;
   char* buffer_;
+
+  pp::CompletionCallbackFactory<Instance> callback_factory_;
+  pp::SimpleThread main_loop_thread_;
+  pp::SimpleThread filesystem_thread_;
 };
 
 Instance::Instance(PP_Instance instance)
     : pp::Instance(instance),
-      buffer_(new char[READ_BUFFER_SIZE]) {
+      buffer_(new char[READ_BUFFER_SIZE]),
+      callback_factory_(this),
+      main_loop_thread_(this),
+      filesystem_thread_(this) {
   PPB_GetInterface get_browser_interface =
       pp::Module::Get()->get_browser_interface();
   glInitializePPAPI(get_browser_interface);
@@ -81,6 +95,9 @@ bool Instance::Init(uint32_t argc, const char* argn[], const char* argv[]) {
   RequestFilteringInputEvents(PP_INPUTEVENT_CLASS_KEYBOARD);
 
   InitializeEventQueue();
+  InitializeFilesystemHack();
+  main_loop_thread_.Start();
+  filesystem_thread_.Start();
 
   std::string src;
   std::string love_src;
@@ -97,17 +114,19 @@ bool Instance::Init(uint32_t argc, const char* argn[], const char* argv[]) {
   if (!love_src.empty()) {
     // Loading via dropped file, etc. Start MainLoop immediately.
     src = love_src;
-    pthread_create(&main_loop_thread_, NULL, MainLoop, this);
+    main_loop_thread_.message_loop().PostWork(
+        callback_factory_.NewCallback(&Instance::MainLoop_Initialize));
   } else {
     // Loading using HandleDocumentLoad, wait for call before starting MainLoop.
   }
 
   url_ = src;
 
+  mount("", "/temporary", "memfs", 0, "");
   mount("", "/persistent", "memfs", 0, "");
-  // TODO(binji): figure out how to make this work...
-//  mount("", "/persistent", "html5fs", 0,
-//        "type=PERSISTENT,expected_size=1048576");
+  // HACK(binji): copy from persistent to html5fs to backup... once html5fs can
+  // work with physfs, get rid of this nastiness.
+  mount("", "/html5fs", "html5fs", 0, "type=PERSISTENT");
   return true;
 }
 
@@ -120,13 +139,50 @@ void Instance::DidChangeFocus(bool has_focus) {
 
 bool Instance::HandleDocumentLoad(const pp::URLLoader& url_loader) {
   url_loader_ = url_loader;
-  pthread_create(&main_loop_thread_, NULL, MainLoop, this);
+  main_loop_thread_.message_loop().PostWork(
+      callback_factory_.NewCallback(&Instance::MainLoop_Initialize));
   return true;
 }
 
 bool Instance::HandleInputEvent(const pp::InputEvent& event) {
   EnqueueEvent(event);
   return true;
+}
+
+void Instance::HandleMessage(const pp::Var& var) {
+  if (!var.is_string()) {
+    return;
+  }
+
+  std::string message = var.AsString();
+  std::string command;
+  std::string params;
+  size_t colon = message.find(':');
+  if (colon != std::string::npos) {
+    command = message.substr(0, colon);
+    params = message.substr(colon + 1);
+  } else {
+    command = message;
+  }
+
+  printf("Got command: %s params: %s\n", command.c_str(), params.c_str());
+  if (command == "fileSystemAccess") {
+    bool allowed = params == "yes";
+    filesystem_thread_.message_loop().PostWork(
+        callback_factory_.NewCallback(
+            &Instance::Filesystem_AllowAccess, allowed));
+  } else if (command == "copyFile") {
+    filesystem_thread_.message_loop().PostWork(
+        callback_factory_.NewCallback(&Instance::Filesystem_CopyFile, params));
+  } else if (command == "makeDir") {
+    filesystem_thread_.message_loop().PostWork(
+        callback_factory_.NewCallback(&Instance::Filesystem_MakeDir, params));
+  } else if (command == "run") {
+    main_loop_thread_.message_loop().PostWork(
+        callback_factory_.NewCallback(&Instance::MainLoop_Run));
+  } else {
+    fprintf(stderr, "Unknown message: %s\n", message.c_str());
+  }
 }
 
 void Instance::PostMessagef(const char* format, ...) {
@@ -139,9 +195,7 @@ void Instance::PostMessagef(const char* format, ...) {
   PostMessage(buffer);
 }
 
-void* Instance::MainLoop(void* param) {
-  Instance* instance = static_cast<Instance*>(param);
-
+void Instance::MainLoop_Initialize(int32_t) {
   // redirect stdout/stderr to console.
   int fd1 = open("/dev/console0", O_WRONLY);
   int fd2 = open("/dev/console3", O_WRONLY);
@@ -150,20 +204,13 @@ void* Instance::MainLoop(void* param) {
   setvbuf(stdout, NULL, _IOLBF, 0);
   setvbuf(stderr, NULL, _IOLBF, 0);
 
-  instance->Download();
-
-  std::vector<const char*> args;
-  args.push_back("/");
-  args.push_back("/persistent/download.love");
+  MainLoop_Download();
 
   // Notify the JavaScript that we're OK!
-  instance->PostMessage("OK");
-
-  love_main(args.size(), const_cast<char**>(args.data()));
-  return NULL;
+  PostMessage("OK");
 }
 
-void Instance::Download() {
+void Instance::MainLoop_Download() {
   int32_t result;
   if (url_loader_.is_null()) {
     printf("Download: url_loader_ is null?\n");
@@ -184,7 +231,7 @@ void Instance::Download() {
   int64_t total_bytes = 0;
   int64_t total_written = 0;
 
-  FILE* outf = fopen("/persistent/download.love", "w+");
+  FILE* outf = fopen("/temporary/game.love", "w+");
   if (!outf) {
     fprintf(stderr, "Cannot open output file\n");
     return;
@@ -224,6 +271,24 @@ done:
   return;
 }
 
+void Instance::MainLoop_Run(int32_t) {
+  std::vector<const char*> args;
+  args.push_back("/");
+  args.push_back("/temporary/game.love");
+  love_main(args.size(), const_cast<char**>(args.data()));
+}
+
+void Instance::Filesystem_AllowAccess(int32_t, bool allowed) {
+  SetFilesystemAccessAllowed(allowed);
+}
+
+void Instance::Filesystem_CopyFile(int32_t, const std::string& path) {
+  CopyFileForRead(path.c_str());
+}
+
+void Instance::Filesystem_MakeDir(int32_t, const std::string& path) {
+  MakeDirectoryForRead(path.c_str());
+}
 
 class Module : public pp::Module {
  public:

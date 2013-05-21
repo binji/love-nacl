@@ -27,6 +27,9 @@
 #include "Filesystem.h"
 #include <filesystem/FileData.h>
 
+// HACK(binji)
+#include "window/ppapi/FilesystemHack.h"
+
 namespace love
 {
 namespace filesystem
@@ -85,6 +88,13 @@ namespace physfs
 
 	bool File::close()
 	{
+		// HACK(binji)
+		if (mode == APPEND || mode == WRITE) {
+			using namespace love::window::ppapi;
+			if (!CopyFileForWrite(PHYSFS_getWriteDir(), filename.c_str()))
+				return false;
+		}
+
 		if (!PHYSFS_close(file))
 			return false;
 		mode = CLOSED;

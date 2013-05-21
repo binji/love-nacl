@@ -206,6 +206,7 @@ LOVE_SOURCES = [
   'src/modules/thread/wrap_Thread.cpp',
   'src/modules/timer/sdl/Timer.cpp',
   'src/modules/timer/wrap_Timer.cpp',
+  'src/modules/window/ppapi/FilesystemHack.cc',
   'src/modules/window/ppapi/Input.cpp',
   'src/modules/window/ppapi/Module.cpp',
   'src/modules/window/ppapi/Window.cpp',
@@ -376,6 +377,7 @@ LOVE_DATA_FILES = [
   'drop.css',
   'drop.html',
   'drop.js',
+  'filesystem.js',
   'icon128.png',
   'icon16.png',
   'icon48.png',
@@ -408,6 +410,7 @@ def GenerateManifest(out, config):
   resources = Select('love-exe').And(keys=config_keys).outputs
   resources += Select('love-nmf').And(keys=config_keys).outputs
   resources = [Filename(n).Base for n in resources]
+  resources.append('filesystem.js')
 
   return Build(out, 'manifest', 'data/manifest.json.template',
         config=config, resources=resources)
