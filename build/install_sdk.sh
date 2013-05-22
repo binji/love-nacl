@@ -1,7 +1,7 @@
 set -o errexit
 
-readonly SCRIPT_DIR=$(dirname $BASH_SOURCE)
-readonly ROOT_DIR=${SCRIPT_DIR}/..
+readonly SCRIPT_DIR=$(dirname $(readlink -f $0))
+readonly ROOT_DIR=$(dirname ${SCRIPT_DIR})
 readonly OUT_DIR=${ROOT_DIR}/out
 readonly NACL_SDK_URL=http://storage.googleapis.com/nativeclient-mirror/nacl/nacl_sdk/nacl_sdk.zip
 
