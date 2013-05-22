@@ -12,14 +12,16 @@ all: ${BUILD_NINJA} ${NINJA} ${NACL_SDK_ROOT}
 	@${NINJA}
 
 ${OUT_DIR}:
-	mkdir -p ${OUT_DIR}
+	@mkdir -p ${OUT_DIR}
 
 ${NINJA}: | ${OUT_DIR}
-	cd third_party/ninja && ./bootstrap.py
-	cp third_party/ninja/ninja ${NINJA}
+	@echo "installing ninja"
+	@cd third_party/ninja && ./bootstrap.py
+	@cp third_party/ninja/ninja ${NINJA}
 
 ${NACL_SDK_ROOT}: | ${OUT_DIR}
-	./build/install_sdk.sh
+	@echo "installing nacl_sdk"
+	@./build/install_sdk.sh
 
 ${BUILD_NINJA}: build/build.nw ${NINJA_WRAP}
 	@python ${NINJA_WRAP} $< -o $@ -D nacl_sdk_root=${NACL_SDK_ROOT}

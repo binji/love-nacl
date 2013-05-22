@@ -1,5 +1,7 @@
 LÖVELINESS is a port of LÖVE to Native Client. Wow!
 
+[![Build Status](https://travis-ci.org/binji/love-nacl.png?branch=master)](https://travis-ci.org/binji/love-nacl)
+
 Setting up the Repo
 -------------------
 
