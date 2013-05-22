@@ -1,3 +1,6 @@
 [submodule "build/ninja-wrap"]
 	path = build/ninja-wrap
 	url = http://github.com/binji/ninja-wrap.git
+[submodule "third_party/ninja"]
+	path = third_party/ninja
+	url = http://github.com/martine/ninja

@@ -405,21 +405,21 @@ Rule('manifest',
      'MANIFEST $out',
      implicit='script/generate_manifest.py')
 
-def GenerateManifest(out, config):
+def GenerateManifest(out, config, with_key=True):
   config_keys = {'config': config}
   resources = Select('love-exe').And(keys=config_keys).outputs
   resources += Select('love-nmf').And(keys=config_keys).outputs
   resources = [Filename(n).Base for n in resources]
   resources.append('filesystem.js')
-  use_key = ''
-  if config == 'debug':
-    use_key = '-k'
+  key = '-k' if with_key else ''
 
   return Build(out, 'manifest', 'data/manifest.json.template',
-        config=config, resources=resources, key=use_key)
+               config=config, resources=resources, key=key)
 
 GenerateManifest('out/manifest.json', 'debug')
-GenerateManifest('out/package/manifest.json', 'release').Tag('package')
+GenerateManifest('out/package/manifest.json', 'release')
+GenerateManifest('out/package-release/manifest.json', 'release',
+                 with_key=False).Tag('package')
 
 
 # Copy data files to packagedir

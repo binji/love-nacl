@@ -1,16 +1,7 @@
 *.o
 *.love
 *.pyc
-.deps
-.dirstamp
-Makefile
-/autom4te.cache
 /build.ninja
-/config.h
-/config.log
-/config.status
-/libtool
+/.ninja_deps
 /.ninja_log
 /out
-/src/love
-/stamp-h1
