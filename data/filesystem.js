@@ -13,6 +13,31 @@ var messageMap = {
   'requestFileSystem': onMessageRequestFileSystem,
 }
 
+function requestQuota(size, onSuccess, onError) {
+  if (navigator.webkitPersistentStorage) {
+    return navigator.webkitPersistentStorage.requestQuota(
+        size, onSuccess, onError);
+  } else {
+    return window.webkitStorageInfo.requestQuota(
+        window.PERSISTENT, size, onSuccess, onError);
+  }
+}
+
+function queryUsageAndQuota(onSuccess, onError) {
+  if (navigator.webkitPersistentStorage) {
+    return navigator.webkitPersistentStorage.queryUsageAndQuota(
+        onSuccess, onError);
+  } else {
+    return window.webkitStorageInfo.queryUsageAndQuota(
+        window.PERSISTENT, onSuccess, onError);
+  }
+}
+
+function requestFileSystem(size, onSuccess, onError) {
+  return window.webkitRequestFileSystem(
+      window.PERSISTENT, size, onSuccess, onError);
+}
+
 function onMessageBack(data, response) {
   window.history.back();
 }
@@ -80,8 +105,7 @@ function onMessageGetFiles(data, response) {
     response({done: true});
   }
 
-  window.webkitRequestFileSystem(window.PERSISTENT, fileSystemSize,
-      onRequestSuccess, onRequestError);
+  requestFileSystem(fileSystemSize, onRequestSuccess, onRequestError);
 }
 
 function onMessageQueryFilesystem(data, response) {
@@ -98,11 +122,11 @@ function onMessageQueryFilesystem(data, response) {
     response({ok: false});
   }
 
-  navigator.webkitPersistentStorage.queryUsageAndQuota(onSuccess, onError);
+  queryUsageAndQuota(onSuccess, onError);
 }
 
 function onMessageRequestFileSystem(data, response) {
-  function onSuccess(fileSystem) {
+  function onSuccess() {
     response({ok: true});
   }
 
@@ -110,8 +134,7 @@ function onMessageRequestFileSystem(data, response) {
     response({ok: false});
   }
 
-  navigator.webkitPersistentStorage.requestQuota(
-      fileSystemSize, onSuccess, onError);
+  requestQuota(fileSystemSize, onSuccess, onError);
 }
 
 function onWindowMessage(e) {
