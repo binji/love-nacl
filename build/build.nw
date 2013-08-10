@@ -1,27 +1,18 @@
 # vim: set syntax=python
 
-ARCHES=('x86_32', 'x86_64', 'arm')
 CONFIGS=('debug', 'release')
-arch_config={'arch': ARCHES, 'config': CONFIGS}
+arch_config={'config': CONFIGS}
 debug_keys = {'config': 'debug'}
 release_keys = {'config': 'release'}
 
 Variable('nacl_sdk_root', Args['nacl_sdk_root'])
 Variable('toolchain_dir', '$nacl_sdk_root/toolchain')
-Variable('toolchain_dir_x86', '$toolchain_dir/%s_x86_newlib' % Args['platform'])
-Variable('toolchain_dir_arm', '$toolchain_dir/%s_arm_newlib' % Args['platform'])
-Variable('ar-arm', '$toolchain_dir_arm/bin/arm-nacl-ar')
-Variable('ar-x86_32', '$toolchain_dir_x86/bin/i686-nacl-ar')
-Variable('ar-x86_64', '$toolchain_dir_x86/bin/x86_64-nacl-ar')
-Variable('cc-arm', '$toolchain_dir_arm/bin/arm-nacl-gcc')
-Variable('cc-x86_32', '$toolchain_dir_x86/bin/i686-nacl-gcc')
-Variable('cc-x86_64', '$toolchain_dir_x86/bin/x86_64-nacl-gcc')
-Variable('cxx-arm', '$toolchain_dir_arm/bin/arm-nacl-g++')
-Variable('cxx-x86_32', '$toolchain_dir_x86/bin/i686-nacl-g++')
-Variable('cxx-x86_64', '$toolchain_dir_x86/bin/x86_64-nacl-g++')
-Variable('strip-arm', '$toolchain_dir_arm/bin/arm-nacl-strip')
-Variable('strip-x86_32', '$toolchain_dir_x86/bin/i686-nacl-strip')
-Variable('strip-x86_64', '$toolchain_dir_x86/bin/x86_64-nacl-strip')
+Variable('toolchain_dir_pnacl', '$toolchain_dir/%s_x86_pnacl' % Args['platform'])
+Variable('pnacl-ar', '$toolchain_dir_pnacl/newlib/bin/pnacl-ar')
+Variable('pnacl-cc', '$toolchain_dir_pnacl/newlib/bin/pnacl-clang')
+Variable('pnacl-cxx', '$toolchain_dir_pnacl/newlib/bin/pnacl-clang++')
+Variable('pnacl-strip', '$toolchain_dir_pnacl/newlib/bin/pnacl-strip')
+Variable('pnacl-finalize', '$toolchain_dir_pnacl/newlib/bin/pnacl-finalize')
 Variable('nmf', '$nacl_sdk_root/tools/create_nmf.py')
 
 Rule('cp', 'cp $in $out', 'COPY $out')
@@ -29,14 +20,16 @@ Rule('cc', '$cc $ccflags -MMD -MF $out.d -c $in -o $out', 'CC $out',
      depfile='$out.d')
 Rule('ar', '$ar rc $out $in', 'AR $out')
 Rule('link', '$cc $in $ldflags -o $out', 'LINK $out')
+Rule('finalize', '$pnacl-finalize $in -o $out', 'FINALIZE $out')
 Rule('nmf', '$nmf $in -o $out', 'NMF $out')
 Rule('zip', 'rm -f $out && zip -9 $out -j $in', 'ZIP $out')
 Rule('strip', '$strip $in -o $out', 'STRIP $out')
 
-sources = Build('out/{arch}/{config}/{inf:-ext}.o', 'cc', '{inf}') \
+sources = Build('out/{config}/{inf:-ext}.o', 'cc', '{inf}') \
     .Tag('{name}-sources')
-#lib = Build('out/{arch}/{config}/lib{name}.a', 'ar').Tag('{name}-lib')
-exe = Build('out/{name}_{arch}_{config}.nexe', 'link').Tag('{name}-exe')
+#lib = Build('out/{config}/lib{name}.a', 'ar').Tag('{name}-lib')
+exe = Build('out/{name}_{config}.pexe', 'finalize').Tag('{name}-exe')
+bc = Build('out/{name}_{config}.bc', 'link').Tag('{name}-bc')
 nmf = Build('out/{name}_{config}.nmf', 'nmf').Tag('{name}-nmf')
 data = Build('out/{inf}', 'cp', 'data/{inf}').Tag('{name}-data')
 
@@ -266,6 +259,7 @@ LOVE_INCLUDE_DIRS = [
   'src/modules',
   'src/libraries',
   '$nacl_sdk_root/include',
+  '$nacl_sdk_root/include/pnacl',
   'third_party/include',
   'third_party/include/SDL',
 ]
@@ -280,8 +274,8 @@ LOVE_DEFINES = [
 ]
 
 LOVE_LIB_DIRS = [
-  '$nacl_sdk_root/lib/newlib_{arch}/Release',
-  'third_party/lib/newlib_{arch}',
+  '$nacl_sdk_root/lib/pnacl/Release',
+  'third_party/lib/pnacl',
 ]
 
 LOVE_LIBS = [
@@ -312,19 +306,26 @@ LOVE_LIBS = [
 for b in sources.ForEach(name='love', inf=LOVE_SOURCES, **arch_config):
   b.Set('ccflags', Prefix('-I', LOVE_INCLUDE_DIRS))
   b.Append('ccflags', Prefix('-D', LOVE_DEFINES))
-  b.Append('ccflags', '-Wall -Werror -Wno-switch -Wno-unused-variable')
+  b.Append('ccflags', '-Wall -Werror -Wno-switch '
+           '-Wno-unused-variable -Wno-unused-value -Wno-unused-private-field '
+           '-Wno-null-conversion')
   b.Append('order_only', Select('makelua').outputs)
 
 for b in sources.ForEach(name='box2d', inf=BOX2D_SOURCES, **arch_config):
   b.Set('ccflags', Prefix('-I', BOX2D_INCLUDE_DIRS))
   # Don't turn on -Wall for Box2d -- too many warnings :-/
 
-for b in exe.ForEach(name='love', **arch_config):
-  subkeys = b.SubKeys('arch', 'config')
+for b in bc.ForEach(name='love', **arch_config):
+  subkeys = b.SubKeys('config')
   b.Set('ldflags', Prefix('-L', LOVE_LIB_DIRS))
   b.Set('ldflags', Prefix('-l', LOVE_LIBS))
   b.Set('inputs',
         Select('love-sources', 'box2d-sources').And(keys=subkeys).outputs)
+
+for b in exe.ForEach(name='love', **arch_config):
+  subkeys = b.SubKeys('config')
+  b.Set('inputs', Select('love-bc').And(keys=subkeys).outputs)
+  b.Tag('package')
 
 for b in nmf.ForEach(name='love', config=CONFIGS):
   b.Append('inputs',
@@ -344,7 +345,7 @@ TEST_INCLUDE_DIRS = [
 ]
 
 TEST_LIB_DIRS = [
-  '$nacl_sdk_root/lib/newlib_{arch}/Release',
+  '$nacl_sdk_root/lib/pnacl/Release',
 ]
 
 TEST_LIBS = [
@@ -356,10 +357,15 @@ TEST_LIBS = [
 for b in sources.ForEach(name='test', inf=TEST_SOURCES, **arch_config):
   b.Set('ccflags', Prefix('-I', TEST_INCLUDE_DIRS))
 
-for b in exe.ForEach(name='test', **arch_config):
+for b in bc.ForEach(name='test', **arch_config):
   b.Set('ldflags', Prefix('-L', TEST_LIB_DIRS))
   b.Set('ldflags', Prefix('-l', TEST_LIBS))
   b.Set('inputs', Select('test-sources').And(keys=b.keys).outputs)
+
+for b in exe.ForEach(name='test', **arch_config):
+  subkeys = b.SubKeys('config')
+  b.Set('inputs', Select('love-bc').And(keys=subkeys).outputs)
+  b.Tag('package')
 
 for b in nmf.ForEach(name='test', config=CONFIGS):
   b.Append('inputs',
@@ -427,12 +433,6 @@ for b in Select('love-data'):
   n = Build('out/package/' + Filename(b.outputs).base, 'cp', b.outputs)
   n.Tag('package')
 
-# Copy .nexes to packagedir, stripped.
-for b in Select('love-exe', 'test-exe').And(keys=release_keys):
-  n = Build('out/package/' + Filename(b.outputs).Base, 'strip', b.outputs)
-  n.Set('strip', '$strip-' + b.keys['arch'])
-  n.Tag('package')
-
 # Copy .nmfs to packagedir
 for b in Select('love-nmf', 'test-nmf').And(keys=release_keys):
   n = Build('out/package/' + Filename(b.outputs).Base, 'cp', b.outputs)
@@ -451,10 +451,10 @@ for b in Select(keys=release_keys).And(rule='cc'):
 for b in Select(rule='cc'):
   ext = Filename(b.inputs).Extension
   if ext in ('.cc', '.cpp'):
-    b.Set('cc', '$cxx-{arch}')
+    b.Set('cc', '$pnacl-cxx')
   elif ext == '.c':
-    b.Set('cc', '$cc-{arch}')
+    b.Set('cc', '$pnacl-cc')
 for b in Select(rule='link'):
-  b.Set('cc', '$cxx-{arch}')
+  b.Set('cc', '$pnacl-cxx')
 for b in Select(rule='ar'):
-  b.Set('ar', '$ar-{arch}')
+  b.Set('ar', '$pnacl-ar')

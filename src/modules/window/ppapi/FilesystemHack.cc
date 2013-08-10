@@ -1,7 +1,6 @@
 #include "FilesystemHack.h"
 
 #include <errno.h>
-#include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -14,7 +13,7 @@
 #include "ppapi/cpp/instance.h"
 #include "ppapi/cpp/var.h"
 
-#include "utils/auto_lock.h"
+#include "sdk_util/auto_lock.h"
 
 namespace love {
 namespace window {
@@ -36,7 +35,7 @@ enum FilesystemAccess {
 
 static bool s_requested_filesystem_access = false;
 static FilesystemAccess s_filesystem_access = FILESYSTEM_ACCESS_UNKNOWN;
-static pthread_mutex_t s_mutex;
+static ::sdk_util::SimpleLock s_mutex;
 
 enum FilesystemHackType {
   FILESYSTEM_HACK_MAKE_DIRECTORY,
@@ -218,11 +217,10 @@ void ProcessInfoDeque() {
 
 
 void InitializeFilesystemHack() {
-  pthread_mutex_init(&s_mutex, NULL);
 }
 
 void SetFilesystemAccessAllowed(bool allowed) {
-  AutoLock lock(&s_mutex);
+  AUTO_LOCK(s_mutex);
   if (s_filesystem_access != FILESYSTEM_ACCESS_UNKNOWN) {
     fprintf(stderr, "SetFilesystemAccessAllowed: called again.\n");
     return;
@@ -244,7 +242,7 @@ bool MakeDirectory(const char* writedir, const char* path) {
     return false;
   }
 
-  AutoLock lock(&s_mutex);
+  AUTO_LOCK(s_mutex);
   RequestFilesystemAccess();
   if (s_filesystem_access == FILESYSTEM_ACCESS_ALLOWED) {
     return MakeDirectoryInternal(abs_path);
@@ -266,7 +264,7 @@ bool RemoveFile(const char* writedir, const char* path) {
     return false;
   }
 
-  AutoLock lock(&s_mutex);
+  AUTO_LOCK(s_mutex);
   RequestFilesystemAccess();
   if (s_filesystem_access == FILESYSTEM_ACCESS_ALLOWED) {
     return RemoveFileInternal(abs_path);
@@ -284,7 +282,7 @@ bool RemoveFile(const char* writedir, const char* path) {
 bool CopyFileForWrite(const char* writedir, const char* path) {
   std::string src_path = PathJoin(writedir, path);
 
-  AutoLock lock(&s_mutex);
+  AUTO_LOCK(s_mutex);
   RequestFilesystemAccess();
   if (s_filesystem_access == FILESYSTEM_ACCESS_ALLOWED) {
     return CopyFileForWriteInternal(src_path);
