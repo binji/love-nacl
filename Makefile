@@ -1,6 +1,6 @@
 DATA_DIR?=out/chromium-data-dir
 CHROME_PATH?=/home/binji/dev/chromium/src/out/Release/chrome
-CHROME_ARGS?=--user-data-dir=${DATA_DIR} --enable-nacl ${CHROME_EXTRA_ARGS}
+CHROME_ARGS?=--user-data-dir=${DATA_DIR} --enable-nacl ${CHROME_EXTRA_ARGS} --ignore-gpu-blacklist
 
 OUT_DIR=out
 BUILD_NINJA=build.ninja
@@ -8,6 +8,7 @@ BUILD_NINJA=build.ninja
 NACL_SDK_ROOT=/home/binji/dev/chromium/src/out/pepper_30
 NINJA=${OUT_DIR}/ninja
 NINJA_WRAP=build/ninja-wrap/ninja_wrap.py
+RUN=${NACL_SDK_ROOT}/tools/run.py
 
 all: ${BUILD_NINJA} ${NINJA} ${NACL_SDK_ROOT}
 	@${NINJA}
@@ -35,7 +36,7 @@ runclean: all
 	@${CHROME_PATH} ${NEXE_ARGS}
 
 run: all
-	@${CHROME_PATH} --load-extension=${PWD}/${OUT_DIR} ${CHROME_ARGS}
+	@${RUN} ${CHROME_PATH} -C ${PWD}/${OUT_DIR} -P drop.html -- ${CHROME_ARGS}
 
 run-package: all
 	@${CHROME_PATH} --load-extension=${PWD}/${OUT_DIR}/package ${CHROME_ARGS}

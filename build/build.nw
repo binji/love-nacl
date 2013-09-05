@@ -325,7 +325,6 @@ for b in bc.ForEach(name='love', **arch_config):
 for b in exe.ForEach(name='love', **arch_config):
   subkeys = b.SubKeys('config')
   b.Set('inputs', Select('love-bc').And(keys=subkeys).outputs)
-  b.Tag('package')
 
 for b in nmf.ForEach(name='love', config=CONFIGS):
   b.Append('inputs',
@@ -365,7 +364,6 @@ for b in bc.ForEach(name='test', **arch_config):
 for b in exe.ForEach(name='test', **arch_config):
   subkeys = b.SubKeys('config')
   b.Set('inputs', Select('love-bc').And(keys=subkeys).outputs)
-  b.Tag('package')
 
 for b in nmf.ForEach(name='test', config=CONFIGS):
   b.Append('inputs',
@@ -431,6 +429,11 @@ GenerateManifest('out/package-release/manifest.json', 'release',
 # Copy data files to packagedir
 for b in Select('love-data'):
   n = Build('out/package/' + Filename(b.outputs).base, 'cp', b.outputs)
+  n.Tag('package')
+
+# Copy .pexes to packagedir.
+for b in Select('love-exe', 'test-exe').And(keys=release_keys):
+  n = Build('out/package/' + Filename(b.outputs).Base, 'cp', b.outputs)
   n.Tag('package')
 
 # Copy .nmfs to packagedir

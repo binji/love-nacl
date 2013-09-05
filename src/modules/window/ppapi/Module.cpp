@@ -4,6 +4,7 @@
 #include <stdarg.h>
 
 #include <string>
+#include <sys/mount.h>
 #include <vector>
 
 #include <AL/al.h>

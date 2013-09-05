@@ -34,12 +34,13 @@ function onDrop(e) {
 
 function createModule(url) {
   // Get the manifest to find the correct nmf to use.
-  var manifest = chrome.runtime.getManifest();
-  var nmf = manifest.nacl_modules[0].path;
+  //var manifest = chrome.runtime.getManifest();
+  //var nmf = manifest.nacl_modules[0].path;
+  var nmf = 'love_release.nmf';
 
   var embedEl = document.createElement('embed');
   embedEl.setAttribute('src', nmf);
-  embedEl.setAttribute('type', 'application/x-nacl');
+  embedEl.setAttribute('type', 'application/x-pnacl');
   embedEl.setAttribute('love_src', url);
   document.body.appendChild(embedEl);
 
@@ -47,7 +48,8 @@ function createModule(url) {
   // code.  Idea copied from
   // http://stackoverflow.com/questions/9515704/building-a-chrome-extension-inject-code-in-a-page-using-a-content-script/9517879#9517879
   var scriptEl = document.createElement('script');
-  scriptEl.src = chrome.extension.getURL('injected.js');
+  //scriptEl.src = chrome.extension.getURL('injected.js');
+  scriptEl.src = 'injected.js';
   scriptEl.addEventListener('load', function () {
     this.parentNode.removeChild(this);
   });
