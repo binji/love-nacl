@@ -1,6 +1,6 @@
 DATA_DIR?=out/chromium-data-dir
 CHROME_PATH?=/home/binji/dev/chromium/src/out/Release/chrome
-CHROME_ARGS?=--user-data-dir=${DATA_DIR} --enable-nacl ${CHROME_EXTRA_ARGS}
+CHROME_ARGS?=--user-data-dir=${DATA_DIR} --enable-nacl ${CHROME_EXTRA_ARGS} --ignore-gpu-blacklist
 
 OUT_DIR=out
 BUILD_NINJA=build.ninja

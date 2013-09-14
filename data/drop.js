@@ -19,15 +19,7 @@ function onDrop(e) {
   var file = e.dataTransfer.files[0];
   var url = URL.createObjectURL(file);
   document.body.removeChild($('#dropTarget'));
-
-  function onTransitionEnd(e) {
-    document.body.removeEventListener('transitionend', onTransitionEnd, true);
-    createModule(url);
-  }
-
-  document.body.addEventListener('transitionend', onTransitionEnd, true);
-  document.body.classList.add('loading');
-
+  createModule(url);
   e.stopPropagation();
   e.preventDefault();
 }

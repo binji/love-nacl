@@ -44,7 +44,7 @@ a:focus {
   font-size: 14px;
   margin-top: 0.67em;
 }
-.options {
+.setting-row {
   margin: 10px 0;
 }
 .links {
@@ -52,4 +52,40 @@ a:focus {
 }
 .links > a {
   padding: 0 4px;
+}
+#colorLabel {
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  display: inline-block;
+  font-size: 11.844px;
+  font-weight: bold;
+  line-height: 14px;
+  padding: 2px 4px;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+.swatch {
+  border: 1px solid #888;
+  border-radius: 3px;
+  display: inline-block;
+  float: right;
+  height: 12px;
+  margin: 0 1px;
+  width: 12px;
+}
+.color-black {
+  background-color: #000;
+  color: #fff;
+}
+.color-white {
+  background-color: #fff;
+  color: #000;
+}
+.color-grey {
+  background-color: #888;
+  color: #fff;
+}
+.color-green {
+  background-color: #468847;
+  color: #fff;
 }
