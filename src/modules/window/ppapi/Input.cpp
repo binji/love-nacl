@@ -11,8 +11,10 @@ namespace window {
 namespace ppapi {
 
 
-int g_mouse_x;
-int g_mouse_y;
+int g_window_width = 800;
+int g_window_height = 600;
+int g_mouse_x = 0;
+int g_mouse_y = 0;
 bool g_mouse_button[MOUSE_BUTTON_MAX];
 bool g_keys[KEY_CODE_MAX];
 bool g_key_repeat = false;
@@ -25,6 +27,13 @@ pthread_cond_t g_queue_non_empty;
 void UpdateInputState(const InputEvent& event);
 void UpdateInputState(const InputEvents& events);
 
+int ClampMouseX(int x) {
+  return std::min(std::max(x, 0), g_window_width - 1);
+}
+
+int ClampMouseY(int y) {
+  return std::min(std::max(y, 0), g_window_height - 1);
+}
 
 bool ConvertEvent(const pp::InputEvent& in_event, InputEvent* out_event) {
   InputType type;
@@ -76,8 +85,8 @@ bool ConvertEvent(const pp::InputEvent& in_event, InputEvent* out_event) {
   switch (type) {
     case INPUT_MOUSE: {
       pp::MouseInputEvent mouse_event(in_event);
-      out_event->mouse.x = mouse_event.GetPosition().x();
-      out_event->mouse.y = mouse_event.GetPosition().y();
+      out_event->mouse.x = ClampMouseX(mouse_event.GetPosition().x());
+      out_event->mouse.y = ClampMouseY(mouse_event.GetPosition().y());
       out_event->mouse.movement_x = mouse_event.GetMovement().x();
       out_event->mouse.movement_y = mouse_event.GetMovement().y();
       switch (mouse_event.GetButton()) {
@@ -133,6 +142,14 @@ bool ConvertEvent(const pp::InputEvent& in_event, InputEvent* out_event) {
 void InitializeEventQueue() {
   pthread_mutex_init(&g_event_queue_mutex, NULL);
   pthread_cond_init(&g_queue_non_empty, NULL);
+}
+
+void EnqueueViewChangeEvent(int32_t width, int32_t height) {
+  InputEvent event;
+  event.type = INPUT_VIEW_CHANGED;
+  event.view_changed.width = width;
+  event.view_changed.height = height;
+  EnqueueEvent(event);
 }
 
 void EnqueueFocusEvent(bool has_focus) {
@@ -239,8 +256,8 @@ void UpdateInputState(const InputEvent& event) {
   Window* window = static_cast<Window*>(Window::getSingleton());
   switch (event.type) {
     case INPUT_MOUSE:
-      g_mouse_x = event.mouse.x;
-      g_mouse_y = event.mouse.y;
+      g_mouse_x = ClampMouseX(event.mouse.x);
+      g_mouse_y = ClampMouseY(event.mouse.y);
 
       switch (event.mouse.type) {
         case MOUSE_DOWN:
@@ -267,6 +284,11 @@ void UpdateInputState(const InputEvent& event) {
 
     case INPUT_FOCUS:
       window->onFocusChanged(event.focus.has_focus);
+      break;
+
+    case INPUT_VIEW_CHANGED:
+      g_window_width = event.view_changed.width;
+      g_window_height = event.view_changed.height;
       break;
   }
 }
