@@ -14,7 +14,7 @@
 #include "ppapi/cpp/instance.h"
 #include "ppapi/cpp/var.h"
 
-#include "utils/auto_lock.h"
+#include "sdk_util/auto_lock.h"
 
 namespace love {
 namespace window {
