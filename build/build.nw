@@ -442,6 +442,19 @@ for b in Select('love-nmf', 'test-nmf').And(keys=release_keys):
 Build('out/package.zip', 'zip', Select('package').outputs)
 
 
+
+#
+# Tests
+#
+
+TESTS = GlobList('tests/*')
+
+for test in TESTS:
+  test_name = Filename(test).Base
+  sources = GlobList('tests/%s/*' % test_name)
+  Build('out/tests/%s.love' % test_name, 'zip', sources)
+
+
 ################################################################################
 
 for b in Select(keys=debug_keys).And(rule='cc'):
