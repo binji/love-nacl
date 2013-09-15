@@ -24,7 +24,9 @@
   "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCqquUnjmyCUo+Cug9qCF6Fz1d5e+d94Z7zwNndJ4QDxXW9wKZo8u6/GCNB5QRSfKdeeIQxIkzHn8G8zelOmdgdiA7AxwIEFrp1XfFFdM4Mf+aIUC69wkG04c0O1BbxsJyeDO6e46dFZwhatHcVUqOm5cRHv3z7XjixAnx3r8+b7QIDAQAB",
 [[]]
   "permissions": [
-    "<all_urls>",
+    "*://*.love2d.org/*",
+    "*://*.dropboxusercontent.com/*.love?*",
+    "*://*/*.love",
     "contextMenus",
     "storage",
     "unlimitedStorage",
