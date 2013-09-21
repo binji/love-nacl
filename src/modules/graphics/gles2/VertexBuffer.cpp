@@ -134,12 +134,19 @@ namespace gles2
 		// Copy the old buffer only if 'restore' was requested.
 		const GLvoid *src = restore ? buffer_copy : 0;
 
+		// NOTE(binji): glGetError is very slow on NaCl.
+#if 0
 		while (GL_NO_ERROR != glGetError())
 			/* clear error messages */;
+#endif
 
 		// Note that if 'src' is '0', no data will be copied.
 		glBufferData(getTarget(), getSize(), src, getUsage());
+#if 0
 		GLenum err = glGetError();
+#else
+		Glenum err = GL_NO_ERROR;
+#endif
 
 		// Clean up buffer_copy, if it exists.
 		delete[] buffer_copy;
