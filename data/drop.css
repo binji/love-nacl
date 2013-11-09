@@ -1,10 +1,6 @@
 body {
   margin: 0;
-  background-color: #fff;
   -webkit-transition: background-color .3s;
-}
-body.loading {
-  background-color: #000;
 }
 .fullscreen {
   bottom: 0;
@@ -25,11 +21,18 @@ body.loading {
   margin: 30px;
   background-color: #eee;
 }
-#dropTarget > span {
-  color: #468847;
+#dropTarget > div {
   font-family: Helvetica, Arial, sans-serif;
-  font-size: 38.5px;
   margin: auto;
+  text-align: center;
+}
+.large {
+  color: #468847;
+  font-size: 38.5px;
+}
+.small {
+  color: #888;
+  font-size: 20px;
 }
 embed {
   margin: auto;

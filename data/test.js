@@ -75,7 +75,9 @@ function runFindNaClPlugin(cb) {
 function runTryModule(cb, attrs) {
   var giveUpTime = 3 * 1000;  // 3 seconds.
   var workspaceEl = $('#workspace');
+  workspaceEl.addEventListener('loadstart', moduleLoadStart, true);
   workspaceEl.addEventListener('load', moduleLoad, true);
+  workspaceEl.addEventListener('error', moduleError, true);
   workspaceEl.addEventListener('message', moduleMessage, true);
   workspaceEl.addEventListener('crash', moduleCrash, true);
 
@@ -87,10 +89,21 @@ function runTryModule(cb, attrs) {
   workspaceEl.appendChild(embedEl);
   var giveUpId = window.setTimeout(giveUp, giveUpTime);
 
+  var moduleLoadStart = false;
   var moduleLoaded = false;
+
+  function moduleLoadStart(e) {
+    moduleLoadStart = true;
+  }
+
   function moduleLoad(e) {
     moduleLoaded = true;
     embedEl.postMessage('OK?');
+  }
+
+  function moduleError(e) {
+    window.clearInterval(giveUpId);
+    cleanUpAndCallback(false, 'NaCl Module load error: ' + embedEl.lastError);
   }
 
   function moduleMessage(e) {
@@ -109,19 +122,27 @@ function runTryModule(cb, attrs) {
 
   function moduleCrash(e) {
     window.clearInterval(giveUpId);
-    cleanUpAndCallback(false, 'NaCl Module crashed.');
+    cleanUpAndCallback(
+        false,
+        'NaCl Module crashed. exit code: ' + embedEl.exitStatus);
   }
 
   function giveUp() {
     if (moduleLoaded) {
       cleanUpAndCallback(false, 'Module loaded, but no message received...');
+    } else if (moduleLoadStart) {
+      cleanUpAndCallback(
+          false,
+          'NaCl module started loading, but didn\'t finish.');
     } else {
-      cleanUpAndCallback(false, 'NaCl module didn\'t load.');
+      cleanUpAndCallback(false, 'NaCl module never started loading.');
     }
   }
 
   function cleanUpAndCallback(result, message) {
+    workspaceEl.removeEventListener('loadstart', moduleLoadStart, true);
     workspaceEl.removeEventListener('load', moduleLoad, true);
+    workspaceEl.removeEventListener('error', moduleError, true);
     workspaceEl.removeEventListener('message', moduleMessage, true);
     workspaceEl.removeEventListener('crash', moduleCrash, true);
     workspaceEl.removeChild(embedEl);
@@ -176,6 +197,8 @@ function testFailed(error) {
   $('#alertFileIssue').addEventListener('click', function () {
     chrome.tabs.create({url: 'https://github.com/binji/love-nacl/issues'});
   });
+  var version = chrome.runtime.getManifest().version;
+  $('#alertVersionMsg').textContent = 'LÖVELINESS version ' + version;
   $('#alertErrorMsg').textContent = error;
   $('#alertError').removeAttribute('hidden');
 }

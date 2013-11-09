@@ -148,21 +148,36 @@ namespace gles2
 		sprite = image;
 		sprite->retain();
 
-		spriteBatch->setImage(sprite);
+ 		if (spriteBatch)
+			spriteBatch->setImage(sprite);
 	}
 
 	void ParticleSystem::setBufferSize(unsigned int size)
 	{
-		// resize the spritebatch to the new max particle count
-		SpriteBatch *newspritebatch = 0;
-		try
+		// Already the correct size, just reset the data (to mimic
+		// behavior below.
+		if (size == static_cast<unsigned int>(pEnd - pStart))
 		{
-			newspritebatch = new SpriteBatch(sprite, size, SpriteBatch::USAGE_STREAM);
+			reset();
+ 			if (spriteBatch)
+				spriteBatch->clear();
+ 			return;
 		}
-		catch (love::Exception &)
+
+		SpriteBatch *newspritebatch = 0;
+
+		if (size)
 		{
-			delete newspritebatch;
-			throw;
+			// resize the spritebatch to the new max particle count
+			try
+			{
+				newspritebatch = new SpriteBatch(sprite, size, SpriteBatch::USAGE_STREAM);
+			}
+			catch (love::Exception &)
+			{
+				delete newspritebatch;
+				throw;
+			}
 		}
 
 		delete spriteBatch;
@@ -328,21 +343,21 @@ namespace gles2
 	{
 		for (size_t i = 0; i < quads.size(); i++)
 			quads[i]->release();
-	
+
 		quads.resize(newQuads.size());
-	
+
 		for (size_t i = 0; i < newQuads.size(); i++)
 		{
 			quads[i] = newQuads[i];
 			quads[i]->retain();
 		}
 	}
-	
+
 	void ParticleSystem::setQuads()
 	{
 		for (size_t i = 0; i < quads.size(); i++)
 			quads[i]->release();
-	
+
 		quads.resize(0);
 	}
 
@@ -362,7 +377,7 @@ namespace gles2
 	{
 		return position.getY();
 	}
-	
+
 	const love::Vector& ParticleSystem::getPosition() const
 	{
 		return position;

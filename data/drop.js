@@ -2,6 +2,10 @@ function $(selector) {
   return document.querySelector(selector);
 }
 
+function onClick(e) {
+  $('input').dispatchEvent(new MouseEvent('click'));
+}
+
 function onDragOver(e) {
   e.dataTransfer.dropEffect = 'copy';
   $('#dropTarget').classList.add('dragover');
@@ -17,19 +21,20 @@ function onDragLeave(e) {
 
 function onDrop(e) {
   var file = e.dataTransfer.files[0];
-  var url = URL.createObjectURL(file);
-  document.body.removeChild($('#dropTarget'));
-
-  function onTransitionEnd(e) {
-    document.body.removeEventListener('transitionend', onTransitionEnd, true);
-    createModule(url);
-  }
-
-  document.body.addEventListener('transitionend', onTransitionEnd, true);
-  document.body.classList.add('loading');
-
+  loadFile(file);
   e.stopPropagation();
   e.preventDefault();
+}
+
+function onFileChange(e) {
+  var file = $('input').files[0];
+  loadFile(file);
+}
+
+function loadFile(file) {
+  var url = URL.createObjectURL(file);
+  document.body.removeChild($('#dropTarget'));
+  createModule(url);
 }
 
 function createModule(url) {
@@ -57,7 +62,9 @@ function createModule(url) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  $('#dropTarget').addEventListener('click', onClick, false);
   $('#dropTarget').addEventListener('dragleave', onDragLeave, false);
   $('#dropTarget').addEventListener('dragover', onDragOver, false);
   $('#dropTarget').addEventListener('drop', onDrop, false);
+  $('input').addEventListener('change', onFileChange, false);
 });

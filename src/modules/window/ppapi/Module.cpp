@@ -132,6 +132,8 @@ bool Instance::Init(uint32_t argc, const char* argn[], const char* argv[]) {
 }
 
 void Instance::DidChangeView(const pp::View& view) {
+  pp::Rect rect = view.GetRect();
+  EnqueueViewChangeEvent(rect.width(), rect.height());
 }
 
 void Instance::DidChangeFocus(bool has_focus) {

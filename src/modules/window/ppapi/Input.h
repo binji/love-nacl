@@ -16,6 +16,7 @@ enum InputType {
   INPUT_MOUSE,
   INPUT_WHEEL,
   INPUT_FOCUS,
+  INPUT_VIEW_CHANGED,
   INPUT_TYPE_MAX,
 };
 
@@ -238,6 +239,11 @@ struct FocusEvent {
   bool has_focus;
 };
 
+struct ViewChangedEvent {
+  int32_t width;
+  int32_t height;
+};
+
 struct InputEvent {
   InputType type;
   uint32_t modifiers;
@@ -247,12 +253,14 @@ struct InputEvent {
     MouseEvent mouse;
     WheelEvent wheel;
     FocusEvent focus;
+    ViewChangedEvent view_changed;
   };
 };
 
 typedef std::vector<InputEvent> InputEvents;
 
 void InitializeEventQueue();
+void EnqueueViewChangeEvent(int32_t width, int32_t height);
 void EnqueueFocusEvent(bool has_focus);
 void EnqueueEvent(const pp::InputEvent& event);
 void EnqueueEvent(const InputEvent& event);

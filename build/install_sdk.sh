@@ -8,4 +8,4 @@ readonly NACL_SDK_URL=http://storage.googleapis.com/nativeclient-mirror/nacl/nac
 cd ${OUT_DIR}
 wget ${NACL_SDK_URL}
 unzip nacl_sdk.zip
-nacl_sdk/naclsdk update pepper_canary --force
+nacl_sdk/naclsdk update pepper_29 --force
