@@ -4,3 +4,6 @@
 [submodule "third_party/ninja"]
 	path = third_party/ninja
 	url = http://github.com/martine/ninja
+[submodule "build/naclports"]
+	path = build/naclports
+	url = https://chromium.googlesource.com/external/naclports.git

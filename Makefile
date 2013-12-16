@@ -5,7 +5,7 @@ CHROME_ARGS?=--user-data-dir=${DATA_DIR} --enable-nacl ${CHROME_EXTRA_ARGS} --ig
 OUT_DIR=out
 BUILD_NINJA=build.ninja
 #NACL_SDK_ROOT=${OUT_DIR}/nacl_sdk/pepper_canary
-NACL_SDK_ROOT=/home/binji/dev/chromium/src/out/pepper_30
+NACL_SDK_ROOT=/home/binji/dev/chromium/src/out/pepper_33
 NINJA=${OUT_DIR}/ninja
 NINJA_WRAP=build/ninja-wrap/ninja_wrap.py
 RUN=${NACL_SDK_ROOT}/tools/run.py
@@ -27,6 +27,10 @@ ${NACL_SDK_ROOT}: | ${OUT_DIR}
 
 ${BUILD_NINJA}: build/build.nw ${NINJA_WRAP}
 	@python ${NINJA_WRAP} $< -o $@ -D nacl_sdk_root=${NACL_SDK_ROOT}
+
+.PHONY: ports
+ports: | ${NACL_SDK_ROOT}
+	@./build/build_ports.sh
 
 clean:
 	@rm -rf ${OUT_DIR} ${BUILD_NINJA}

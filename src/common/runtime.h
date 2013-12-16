@@ -29,6 +29,9 @@ extern "C" {
 	#include <lua.h>
 	#include <lualib.h>
 	#include <lauxlib.h>
+
+	// Removed in Lua 5.2
+	int luaL_typerror (lua_State *L, int narg, const char *tname);
 }
 
 namespace love

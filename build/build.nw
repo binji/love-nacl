@@ -7,12 +7,12 @@ release_keys = {'config': 'release'}
 
 Variable('nacl_sdk_root', Args['nacl_sdk_root'])
 Variable('toolchain_dir', '$nacl_sdk_root/toolchain')
-Variable('toolchain_dir_pnacl', '$toolchain_dir/%s_x86_pnacl' % Args['platform'])
-Variable('pnacl-ar', '$toolchain_dir_pnacl/newlib/bin/pnacl-ar')
-Variable('pnacl-cc', '$toolchain_dir_pnacl/newlib/bin/pnacl-clang')
-Variable('pnacl-cxx', '$toolchain_dir_pnacl/newlib/bin/pnacl-clang++')
-Variable('pnacl-strip', '$toolchain_dir_pnacl/newlib/bin/pnacl-strip')
-Variable('pnacl-finalize', '$toolchain_dir_pnacl/newlib/bin/pnacl-finalize')
+Variable('toolchain_dir_pnacl', '$toolchain_dir/%s_pnacl' % Args['platform'])
+Variable('pnacl-ar', '$toolchain_dir_pnacl/bin/pnacl-ar')
+Variable('pnacl-cc', '$toolchain_dir_pnacl/bin/pnacl-clang')
+Variable('pnacl-cxx', '$toolchain_dir_pnacl/bin/pnacl-clang++')
+Variable('pnacl-strip', '$toolchain_dir_pnacl/bin/pnacl-strip')
+Variable('pnacl-finalize', '$toolchain_dir_pnacl/bin/pnacl-finalize')
 Variable('nmf', '$nacl_sdk_root/tools/create_nmf.py')
 
 Rule('cp', 'cp $in $out', 'COPY $out')
@@ -260,8 +260,7 @@ LOVE_INCLUDE_DIRS = [
   'src/libraries',
   '$nacl_sdk_root/include',
   '$nacl_sdk_root/include/pnacl',
-  'third_party/include',
-  'third_party/include/SDL',
+  '$toolchain_dir_pnacl/usr/include/SDL',
 ]
 
 BOX2D_INCLUDE_DIRS = [
@@ -271,11 +270,11 @@ BOX2D_INCLUDE_DIRS = [
 
 LOVE_DEFINES = [
   'LOVE_OLD_MODPLUG',
+  'LUA_COMPAT_ALL',
 ]
 
 LOVE_LIB_DIRS = [
   '$nacl_sdk_root/lib/pnacl/Release',
-  'third_party/lib/pnacl',
 ]
 
 LOVE_LIBS = [

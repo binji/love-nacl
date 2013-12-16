@@ -254,7 +254,8 @@ parentEl.addEventListener('message', function(e) {
 ///
 /// Handle messages from the background page.
 ///
-chrome.runtime.onConnect.addListener(onPortConnected);
+// NOTE: removing because PNaCl
+// chrome.runtime.onConnect.addListener(onPortConnected);
 
 function onPortConnected(port) {
   console.log('onPortConnected: ' + port.name);
