@@ -13,6 +13,7 @@ Variable('pnacl-cc', '$toolchain_dir_pnacl/bin/pnacl-clang')
 Variable('pnacl-cxx', '$toolchain_dir_pnacl/bin/pnacl-clang++')
 Variable('pnacl-strip', '$toolchain_dir_pnacl/bin/pnacl-strip')
 Variable('pnacl-finalize', '$toolchain_dir_pnacl/bin/pnacl-finalize')
+Variable('pnacl-translate', '$toolchain_dir_pnacl/bin/pnacl-translate')
 Variable('nmf', '$nacl_sdk_root/tools/create_nmf.py')
 
 Rule('cp', 'cp $in $out', 'COPY $out')
@@ -21,6 +22,9 @@ Rule('cc', '$cc $ccflags -MMD -MF $out.d -c $in -o $out', 'CC $out',
 Rule('ar', '$ar rc $out $in', 'AR $out')
 Rule('link', '$cc $in $ldflags -o $out', 'LINK $out')
 Rule('finalize', '$pnacl-finalize $in -o $out', 'FINALIZE $out')
+Rule('translate',
+     '$pnacl-translate $in --allow-llvm-bitcode-input -arch $arch -o $out',
+     'TRANSLATE $arch $out')
 Rule('nmf', '$nmf $in -o $out', 'NMF $out')
 Rule('zip', 'rm -f $out && zip -9 $out -j $in', 'ZIP $out')
 Rule('strip', '$strip $in -o $out', 'STRIP $out')
@@ -28,6 +32,7 @@ Rule('strip', '$strip $in -o $out', 'STRIP $out')
 sources = Build('out/{config}/{inf:-ext}.o', 'cc', '{inf}') \
     .Tag('{name}-sources')
 #lib = Build('out/{config}/lib{name}.a', 'ar').Tag('{name}-lib')
+nexe = Build('out/{name}_{config}_{arch}.nexe', 'translate').Tag('{name}-nexe')
 exe = Build('out/{name}_{config}.pexe', 'finalize').Tag('{name}-exe')
 bc = Build('out/{name}_{config}.bc', 'link').Tag('{name}-bc')
 nmf = Build('out/{name}_{config}.nmf', 'nmf').Tag('{name}-nmf')
@@ -308,6 +313,7 @@ for b in sources.ForEach(name='love', inf=LOVE_SOURCES, **arch_config):
   b.Append('ccflags', '-Wall -Werror -Wno-switch '
            '-Wno-unused-variable -Wno-unused-value -Wno-unused-private-field '
            '-Wno-null-conversion')
+  b.Append('ccflags', '--pnacl-exceptions=sjlj')
   b.Append('order_only', Select('makelua').outputs)
 
 for b in sources.ForEach(name='box2d', inf=BOX2D_SOURCES, **arch_config):
@@ -324,6 +330,11 @@ for b in bc.ForEach(name='love', **arch_config):
 for b in exe.ForEach(name='love', **arch_config):
   subkeys = b.SubKeys('config')
   b.Set('inputs', Select('love-bc').And(keys=subkeys).outputs)
+
+for b in nexe.ForEach(name='love', arch=['x86_64'], config=['debug']):
+  subkeys = b.SubKeys('config')
+  b.Set('inputs', Select('love-exe').And(keys=subkeys).outputs)
+  b.Set('arch', b.arch)
 
 for b in nmf.ForEach(name='love', config=CONFIGS):
   b.Append('inputs',

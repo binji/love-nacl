@@ -114,21 +114,26 @@ bool Instance::Init(uint32_t argc, const char* argn[], const char* argv[]) {
   }
 
   if (!love_src.empty()) {
-    // Loading via dropped file, etc. Start MainLoop immediately.
     src = love_src;
-    main_loop_thread_.message_loop().PostWork(
-        callback_factory_.NewCallback(&Instance::MainLoop_Initialize));
-  } else {
-    // Loading using HandleDocumentLoad, wait for call before starting MainLoop.
   }
 
   url_ = src;
 
+  umount("/");
+  mount("", "/", "memfs", 0, "");
   mount("", "/temporary", "memfs", 0, "");
   mount("", "/persistent", "memfs", 0, "");
   // HACK(binji): copy from persistent to html5fs to backup... once html5fs can
   // work with physfs, get rid of this nastiness.
   mount("", "/html5fs", "html5fs", 0, "type=PERSISTENT");
+
+  if (!love_src.empty()) {
+    // Loading via dropped file, etc. Start MainLoop immediately.
+    main_loop_thread_.message_loop().PostWork(
+        callback_factory_.NewCallback(&Instance::MainLoop_Initialize));
+  } else {
+    // Loading using HandleDocumentLoad, wait for call before starting MainLoop.
+  }
   return true;
 }
 
@@ -200,6 +205,7 @@ void Instance::PostMessagef(const char* format, ...) {
 }
 
 void Instance::MainLoop_Initialize(int32_t) {
+  printf("MainLoop_Initialize\n");
   // redirect stdout/stderr to console.
   int fd1 = open("/dev/console0", O_WRONLY);
   int fd2 = open("/dev/console3", O_WRONLY);
@@ -215,6 +221,7 @@ void Instance::MainLoop_Initialize(int32_t) {
 }
 
 void Instance::MainLoop_Download() {
+  printf("MainLoop_Download\n");
   int32_t result;
   if (url_loader_.is_null()) {
     printf("Download: url_loader_ is null?\n");
@@ -276,8 +283,9 @@ done:
 }
 
 void Instance::MainLoop_Run(int32_t) {
+  printf("MainLoop_Run\n");
   std::vector<const char*> args;
-  args.push_back("/");
+  args.push_back("loveliness");
   args.push_back("/temporary/game.love");
   love_main(args.size(), const_cast<char**>(args.data()));
   PostMessage("bye");

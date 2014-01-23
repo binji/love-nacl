@@ -41,11 +41,13 @@ function createModule(url) {
   // Get the manifest to find the correct nmf to use.
   //var manifest = chrome.runtime.getManifest();
   //var nmf = manifest.nacl_modules[0].path;
-  var nmf = 'love_release.nmf';
+  //var nmf = 'love_release.nmf';
+  var nmf = 'love_debug.nmf';
 
   var embedEl = document.createElement('embed');
   embedEl.setAttribute('src', nmf);
   embedEl.setAttribute('type', 'application/x-pnacl');
+  //embedEl.setAttribute('type', 'application/x-nacl');
   embedEl.setAttribute('love_src', url);
   document.body.appendChild(embedEl);
 

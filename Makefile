@@ -46,6 +46,6 @@ run-package: all
 	@${CHROME_PATH} --load-extension=${PWD}/${OUT_DIR}/package ${CHROME_ARGS}
 
 debug: all
-	@${CHROME_PATH} --load-extension=${PWD}/${OUT_DIR} ${CHROME_ARGS} --enable-nacl-debug
+	@${RUN} ${CHROME_PATH} -C ${PWD}/${OUT_DIR} -P drop.html -- ${CHROME_ARGS} --enable-nacl-debug
 
 .PHONY: all clean runclean run run-package debug
