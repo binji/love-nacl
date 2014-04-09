@@ -285,7 +285,7 @@ done:
 void Instance::MainLoop_Run(int32_t) {
   printf("MainLoop_Run\n");
   std::vector<const char*> args;
-  args.push_back("loveliness");
+  args.push_back("/loveliness");
   args.push_back("/temporary/game.love");
   love_main(args.size(), const_cast<char**>(args.data()));
   PostMessage("bye");

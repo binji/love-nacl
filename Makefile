@@ -4,14 +4,20 @@ CHROME_ARGS?=--user-data-dir=${DATA_DIR} --enable-nacl ${CHROME_EXTRA_ARGS} --ig
 
 OUT_DIR=out
 BUILD_NINJA=build.ninja
-#NACL_SDK_ROOT=${OUT_DIR}/nacl_sdk/pepper_canary
-NACL_SDK_ROOT=/home/binji/dev/chromium/src/out/pepper_33
+NACL_SDK_ROOT=${OUT_DIR}/nacl_sdk/pepper_33
+#NACL_SDK_ROOT=/home/binji/dev/chromium/src/out/pepper_33
 NINJA=${OUT_DIR}/ninja
 NINJA_WRAP=build/ninja-wrap/ninja_wrap.py
 RUN=${NACL_SDK_ROOT}/tools/run.py
 
 all: ${BUILD_NINJA} ${NINJA} ${NACL_SDK_ROOT}
 	@${NINJA}
+
+love_debug: ${BUILD_NINJA} ${NINJA} ${NACL_SDK_ROOT}
+	@${NINJA} ${OUT_DIR}/love_debug.nmf
+
+love_release: ${BUILD_NINJA} ${NINJA} ${NACL_SDK_ROOT}
+	@${NINJA} ${OUT_DIR}/love_release.nmf
 
 ${OUT_DIR}:
 	@mkdir -p ${OUT_DIR}

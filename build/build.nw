@@ -265,6 +265,7 @@ LOVE_INCLUDE_DIRS = [
   'src/libraries',
   '$nacl_sdk_root/include',
   '$nacl_sdk_root/include/pnacl',
+  '$toolchain_dir_pnacl/usr/include/freetype2',
   '$toolchain_dir_pnacl/usr/include/SDL',
 ]
 
@@ -293,6 +294,7 @@ LOVE_LIBS = [
   'modplug',
   'mpg123',
   'freetype',
+  'bz2',
   'IL',
   'mng',
   'jpeg',
@@ -324,6 +326,7 @@ for b in bc.ForEach(name='love', **arch_config):
   subkeys = b.SubKeys('config')
   b.Set('ldflags', Prefix('-L', LOVE_LIB_DIRS))
   b.Set('ldflags', Prefix('-l', LOVE_LIBS))
+  b.Append('ldflags', '--pnacl-exceptions=sjlj')
   b.Set('inputs',
         Select('love-sources', 'box2d-sources').And(keys=subkeys).outputs)
 
@@ -334,7 +337,9 @@ for b in exe.ForEach(name='love', **arch_config):
 for b in nexe.ForEach(name='love', arch=['x86_64'], config=['debug']):
   subkeys = b.SubKeys('config')
   b.Set('inputs', Select('love-exe').And(keys=subkeys).outputs)
-  b.Set('arch', b.arch)
+  # TODO(binji): hack. Is there a way to get the arch param from above for use
+  # here?
+  b.Set('arch', 'x86_64')
 
 for b in nmf.ForEach(name='love', config=CONFIGS):
   b.Append('inputs',
