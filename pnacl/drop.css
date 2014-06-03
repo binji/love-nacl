@@ -1,0 +1,40 @@
+body {
+  margin: 0;
+  -webkit-transition: background-color .3s;
+}
+.fullscreen {
+  bottom: 0;
+  display: -webkit-flex;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+#dropTarget {
+  background-color: #fff;
+  border: 4px dashed #ccc;
+  margin: 20px;
+  -webkit-transition: background-color, margin;
+  -webkit-transition-duration: .3s;
+}
+#dropTarget.dragover {
+  margin: 30px;
+  background-color: #eee;
+}
+#dropTarget > div {
+  font-family: Helvetica, Arial, sans-serif;
+  margin: auto;
+  text-align: center;
+}
+.large {
+  color: #468847;
+  font-size: 38.5px;
+}
+.small {
+  color: #888;
+  font-size: 20px;
+}
+embed {
+  margin: auto;
+  -webkit-flex: none;
+}
