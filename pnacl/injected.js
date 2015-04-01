@@ -384,8 +384,11 @@ injectExtensionScript('filesystem.js');
 // Attempt to connect via chrome.runtime.connect. If it works, we are running
 // as part of the extension. If not, the background page will connect via
 // chrome.tabs.connect.
-var port = chrome.runtime.connect({name: 'injected'});
-if (port)
-  onPortConnected(port);
+//
+// Disabling this. It crashes Chrome: http://crbug.com/472700
+//
+// var port = chrome.runtime.connect({name: 'injected'});
+// if (port)
+//   onPortConnected(port);
 
 })();
